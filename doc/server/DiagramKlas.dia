@@ -508,7 +508,7 @@
           <dia:attribute name="comment">
             <dia:string>#Kolejka zapytań do danego klienta. Każde zapytanie (słownik) powinno się składać z:
 - filename
-- requestId
+- id (zapytania)
 - originalRequest - oryginalne zapytanie
 - answerCondition - condition, na którym należy wywołać notify, gdy przyjdzie odpowiedź
 Po otrzymaniu odpowiedzi HiddenServerConnection wywoła FileManager.processResponse(...) oraz answerCondition.notify(...)#</dia:string>

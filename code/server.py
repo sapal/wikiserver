@@ -11,6 +11,9 @@ if __name__=="__main__":
     http = threading.Thread(target=httpServer.start)
     http.daemon = True
     http.start()
+    push= threading.Thread(target=hsConnection.startPushFileServer)
+    push.daemon = True
+    push.start()
     try:
         hsConnection.startHSServer()
     except KeyboardInterrupt:

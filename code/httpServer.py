@@ -1,13 +1,18 @@
 # coding=utf-8
 from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
 from fileManager import fileManager
-from urllib import quote
+from urllib import quote,unquote
 
 class HttpRequest(BaseHTTPRequestHandler):
     '''Klasa odpowiedzialna za obsługę HTTP'''
     def do_GET(self):
         try:
-            info = fileManager.getFileInfo(self.path)
+            info = fileManager.getFileInfo(unquote(self.path), 
+                    ' '.join([self.command,
+                        self.path,
+                        self.request_version,
+                        str(self.headers)]))
+            print("HTTP:info:{0}".format(info))
             if info.fileType == "not found":
                 raise IOError()
             self.send_response(200)
@@ -22,9 +27,10 @@ class HttpRequest(BaseHTTPRequestHandler):
                         info.fileModified.acquire()
                         info.fileModified.wait()
                         info.fileModified.release()
-                    chunk = f.read(min(chunkSize, info.currentSize))
+                    chunk = f.read(min(chunkSize, info.currentSize-written))
                     written += len(chunk)
                     self.wfile.write(chunk)
+                    print(chunk)
             elif info.fileType == "directory":
                 if self.path[-1] == '/':
                     self.path = self.path[:-1]
