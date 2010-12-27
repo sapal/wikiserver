@@ -46,4 +46,5 @@ class HttpServer(HTTPServer):
 
 def start():
     server = HttpServer()
+    print("Starting HttpServer.")
     server.serve_forever()

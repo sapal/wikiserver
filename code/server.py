@@ -2,9 +2,16 @@
 # coding=utf-8
 
 import threading
-import fileManager
+from fileManager import fileManager
 import httpServer
+import hsConnection
+import asyncore
 
 if __name__=="__main__":
-    httpServer.start()
-
+    http = threading.Thread(target=httpServer.start)
+    http.daemon = True
+    http.start()
+    try:
+        hsConnection.startHSServer()
+    except KeyboardInterrupt:
+        print("Shutting Down")

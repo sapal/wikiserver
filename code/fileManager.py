@@ -23,16 +23,23 @@ class FileInfo :
 class FileManager :
     '''Klasa zapewniająca dostęp do plików (singleton)'''
     def __init__(self) :
-        self.hiddenServerConnections = None # słownik: nazwa użytkownika (string) -> HiddenServerConnection
-        self.requestInfo = None # słownik: idZapytania(int) -> FileInfo
-        self.fileInfo = None # słownik: ścieżka do pliku (sring) -> FileInfo o najpóźniejszym czasie modyfikacji
+        self.hiddenServerConnections = {} # słownik: nazwa użytkownika (string) -> HiddenServerConnection
+        self.requestInfo = {} # słownik: idZapytania(int) -> FileInfo
+        self.fileInfo = {} # słownik: ścieżka do pliku (sring) -> FileInfo o najpóźniejszym czasie modyfikacji
         pass
 
     def getFileInfo (self, path) :
         """ zwraca FileInfo odpowiedniego plkiu """
-        #TODO: Zwrócić coś sensownego
         info = FileInfo()
-        if random.choice([True, False]):
+        if path.strip() == "/":
+            f = open("users.ls","w")
+            for user in self.hiddenServerConnections.keys():
+                f.write(user+"\n")
+            f.close()
+            info.filename = "users.ls"
+            info.fileType = "directory"
+        #TODO: Zwrócić coś sensownego
+        elif random.choice([True, False]):
             info.filename = "test.html"
             info.fileType = "file"
         else:
