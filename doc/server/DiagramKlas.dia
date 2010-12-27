@@ -1007,7 +1007,7 @@ Zapisuje dane do odpowiedniego pliku i przy każdym zapisie wywołuje sizeChange
             <dia:enum val="0"/>
           </dia:attribute>
           <dia:attribute name="comment">
-            <dia:string>#Zmienia currentSize i robi changed.notifyAll()#</dia:string>
+            <dia:string>#Zmienia currentSize i robi fileModified.notifyAll()#</dia:string>
           </dia:attribute>
           <dia:attribute name="abstract">
             <dia:boolean val="false"/>
