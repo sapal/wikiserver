@@ -80,7 +80,7 @@
         <dia:real val="10.699999999999999"/>
       </dia:attribute>
       <dia:attribute name="name">
-        <dia:string>#FIleManager#</dia:string>
+        <dia:string>#FileManager#</dia:string>
       </dia:attribute>
       <dia:attribute name="stereotype">
         <dia:string>##</dia:string>
