@@ -1,0 +1,16 @@
+syntax: glob
+auto
+.*.swp
+*~
+*.aux
+*.log
+*.out
+*.pdf
+*.thm
+*.toc
+*.d
+*.mpx
+*.tmp
+*.tar.gz
+*.bundle
+*.fmt

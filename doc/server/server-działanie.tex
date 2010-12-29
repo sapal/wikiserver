@@ -1,0 +1,118 @@
+\documentclass[a4paper,notitlepage]{article}
+\usepackage[a4paper, top=2.5cm, bottom=2.5cm, left=2cm, right=2cm]{geometry}
+
+\usepackage{listings}
+\usepackage[utf8]{inputenc}
+\usepackage{polski}
+\usepackage{amsmath}
+\usepackage{alltt}
+\usepackage{graphicx}
+\usepackage{fancyhdr}
+\usepackage[
+	bookmarks, 
+	colorlinks=true, 
+	pdftitle={Projekt na Sieci Komputerowe}, 
+	pdfauthor={Dorota Wąs, Michał Sapalski}, 
+]{hyperref}
+\newlength{\lword}
+\newcommand{\define}[3]{
+\begin{samepage}
+{\settowidth{\lword}{
+\textbf{\large #1} = }\vspace{0.2cm}\par\noindent\hangindent=\lword
+\textbf{\large #1} = \emph{#2} #3\vspace{0.2cm}\par}
+\end{samepage}
+}
+\lstset{
+    language=c++,
+    commentstyle=\itshape,
+    numbers=left,
+    numbersep=5pt,
+    frame=single,
+    tabsize=2,
+    breaklines=true,
+    breakatwhitespace=true,
+    inputencoding=utf8,
+    extendedchars=true,
+	texcl=true,
+	mathescape=true
+}
+\begin{document}
+\pagestyle{fancy}
+\lhead{Sieci Komputerowe --- \textsc{Projekt}}
+\rhead{Dorota Wąs, Michał Sapalski}
+\tableofcontents
+\section{Działanie Servera}
+\begin{figure}
+\includegraphics[width=\linewidth]{DiagramKlas}
+\caption{Diagram klas Servera}
+\end{figure}
+\subsection{Start Servera}
+Przy starcie \verb!Server!a uruchamiają się trzy wątki: 
+\begin{itemize}
+\item \verb!HSServer!
+\item \verb!HttpServer!
+\item \verb!PushFileServer!
+\end{itemize}
+Tworzona jest także klasa FileManager.
+
+\subsection{Obsługa połączenia z~HiddenServerem}
+Każde połączenie z~\verb!HiddenServer!em jest obsługiwane przez 
+dwa wątki w klasie \verb!HiddenServerConnection!. Jeden z~nich służy 
+do~wysyłania zapytań, drugi do przetwarzania odpowiedzi.
+Jak tylko \verb!HiddenServer! prześle \verb!MYNAMEIS!,
+połączenie jest rejestrowane w~\verb!FileManager.hiddenServerConnections!.
+
+\subsection{Obsługa połączenia HTTP}
+Każde połączenie z~użytkownikiem jest obsługiwane przez osobny wątek: 
+\verb!HttpConnection!. Przetwarza on~zapytanie HTTP na~żądanie konkretnego
+pliku i~wywołuje \verb!FileManager.getFileInfo!. W~zależności od~typu zwróconego
+pliku (\verb!FileInfo.fileType!) zwraca on~użytkownikowi błąd 
+(\verb!"not found"!), listing katalogu (\verb!"directory"!) lub plik.
+Odczytywanie pliku/listingu katalogu jest takie samo:
+otwiera się plik \verb!FileInfo.filename!, czyta się tyle bajtów, ile jest
+dostępnych (\verb!FileInfo.currentSize!), wysyła użytkownikowi a~następnie czeka
+na~\verb!FileInfo.fileModified! aż~więcej bajtów będzie dostępnych. Jak cały 
+plik zostanie wysłany, kończy się proces.
+
+\subsection{Zdobywanie pliku przez FileManagera}
+Gdy wywoływana jest metoda \verb!FileManager.getFileInfo! 
+wykonywane są następujące czynności:
+\begin{itemize}
+\item Zapytaniu nadawane jest kolejne \verb!id!
+\item Do odpowiedniego \verb!HiddenServerConnection! wysyłane jest zapytanie 
+o plik
+\item Wątek czeka na odpowiednim \verb!threading.Condition! na odpowiedź
+\item Po uzyskaniu odpowiedzi zwraca odpowiednie \verb!FileInfo!
+\end{itemize}
+
+\subsection{Obsługa zapytania przez HiddenServerConnection}
+Zapytania do~\verb!HiddenServera! są~kolejkowane i~wysyłane
+asynchronicznie z~przetwarzaniem odpowiedzi. \verb!HiddenServerConnection!
+trzyma kolejkę wysłanych zapytań. Kiedy przyjdzie odpowiedź wywołuje 
+\verb!FileManager.processResponse! oraz \verb!answerCondition.notify!.
+
+\subsection{Obsługa odpowiedzi przez FileManagera}
+Gdy wywoływane jest metoda \verb!FileManager.processResponse!
+wykonywane są następujące czynności:
+\begin{itemize}
+\item W~przypadku odpowiedzi \verb!DIRECTORY! lub \verb!OLD! tworzone jest nowe
+\verb!FileInfo!
+\item Odpowiednie \verb!FileInfo! jest mapowane do~odpowiedniego 
+\verb!id!.
+\end{itemize}
+
+\subsection{Przesyłanie plików z~HiddenServera}
+Każde połączenie przychodzące z~\verb!HiddenServer!a jest obsługiwane przez
+osobny wątek: \verb!PushFileConnection!. Zapisuje on otrzymane dane do~pliku
+wskazywanego przez \verb!FileManager.fileInfo!.
+
+\subsection{TODO}
+Dla uproszczenia, następujące rzeczy nie zostały tu uwzględnione:
+\begin{itemize}
+\item Zarządzanie cachem (kasowanie starych plików)
+\item Mechanizm blokowania plików w cache (nie można usunąć pliku w~cache 
+jeśli jakiś proces jeszcze go~potrzebuje)
+\item Watchdogi (procesy obsługujące połączenia powinny być przerywane
+w~przypadku braku odpowiedzi przez dłuższy czas)
+\end{itemize}
+\end{document}
