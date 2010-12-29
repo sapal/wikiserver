@@ -16,10 +16,12 @@ class FileInfo :
     def setModifyTime(self, newTime):
         global fileManager
         self.modifyTime = newTime
-        with fileManager.fileInfoLock:
-            if (self.filename not in fileManager.fileInfo 
-                    or self.modifyTime > fileManager.fileInfo[self.filename].modifyTime):
-                fileManager.fileInfo[self.filename] = self
+        #with fileManager.fileInfoLock:
+        fileManager.fileInfoLock.acquire()
+        if (self.filename not in fileManager.fileInfo 
+                or self.modifyTime > fileManager.fileInfo[self.filename].modifyTime):
+            fileManager.fileInfo[self.filename] = self
+        fileManager.fileInfoLock.release()
 
     def sizeChanged (self, newSize) :
         """ Zmienia currentSize i robi fileModified.notifyAll() """
@@ -36,10 +38,14 @@ class FileManager :
         self.fileInfo = {} # słownik: ścieżka do pliku (string) -> FileInfo o najpóźniejszym czasie modyfikacji
         self.lastRequestId = 0
         self.fileInfoLock = threading.Lock()
+        self.idLock = threading.Lock()
 
     def nextRequestId(self):
+        self.idLock.acquire()
         self.lastRequestId += 1
-        return self.lastRequestId
+        id = self.lastRequestId
+        self.idLock.release()
+        return id
 
     def getFileInfo (self, path, originalRequest) :
         """ zwraca FileInfo odpowiedniego plkiu """
