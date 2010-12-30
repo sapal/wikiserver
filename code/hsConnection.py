@@ -86,9 +86,11 @@ class HiddenServerConnection(asynchat.async_chat):
 class HSServer(asyncore.dispatcher):
     '''Klasa odpowiedzialna za tworzenie HiddenServerConnectionów'''
 
-    def __init__(self, port):
+    def __init__(self, port, reuseAddress=False):
         asyncore.dispatcher.__init__(self)
         self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
+        if reuseAddress:
+            self.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.bind(("", port))
         self.listen(5)
 
@@ -100,17 +102,9 @@ class HSServer(asyncore.dispatcher):
         h = HiddenServerConnection(conn)
         
 def startHSServer():
-    s = HSServer(8888)
+    s = HSServer(8888, reuseAddress=True) # Nie jestem pewien, czy w końcowym kodzie powinno być reuseAddress, ale do debugowania się nada
     print("Starring HSServer.")
-    try:
-        asyncore.loop()
-    except BaseException,e:
-        s.close()
-        for c in fileManager.hiddenServerConnections.values():
-            c.handle_close()
-        asyncore.close_all()
-        print("Closing HSServer.")
-        raise e
+    asyncore.loop()
 
 class PushFileConnection(asynchat.async_chat):
     '''Klasa reprezentująca połączenie przesyłające plik z HiddenServera do Servera.
@@ -177,9 +171,11 @@ Zapisuje dane do odpowiedniego pliku i przy każdym zapisie wywołuje sizeChange
 class PushFileServer(asyncore.dispatcher):
     '''Klasa odpowiedzialna za tworzenie PushFileConnectionów'''
 
-    def __init__(self, port):
+    def __init__(self, port, reuseAddress=False):
         asyncore.dispatcher.__init__(self)
         self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
+        if reuseAddress:
+            self.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.bind(("", port))
         self.listen(5)
 
@@ -192,5 +188,5 @@ class PushFileServer(asyncore.dispatcher):
         
 def startPushFileServer():
     print("Starting PushFileServer")
-    s = PushFileServer(9999) 
+    s = PushFileServer(9999, reuseAddress=True) # Nie jestem pewien, czy w końcowym kodzie powinno być reuseAddress, ale do debugowania się nada
     asyncore.loop()
