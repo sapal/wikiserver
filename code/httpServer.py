@@ -2,6 +2,7 @@
 from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
 from fileManager import fileManager
 from urllib import quote,unquote
+from SocketServer import ThreadingMixIn
 
 class HttpRequest(BaseHTTPRequestHandler):
     '''Klasa odpowiedzialna za obsługę HTTP'''
@@ -45,7 +46,7 @@ class HttpRequest(BaseHTTPRequestHandler):
         except IOError:
             self.send_error(404,'Nie znaleziono pliku {0}'.format(self.path))
 
-class HttpServer(HTTPServer):
+class HttpServer(ThreadingMixIn, HTTPServer):
     '''Klasa odpowiedzialna za tworzenie HttpRequestów'''
     def __init__(self, interface='', port=8080, handler=HttpRequest) :
         HTTPServer.__init__(self,(interface,port),handler)
