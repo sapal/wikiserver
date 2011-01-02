@@ -7,6 +7,7 @@ import asynchat, asyncore
 import socket
 from Queue import Queue
 import base64
+import random # dorota
 
 class HiddenServerConnection(asynchat.async_chat):
     '''Klasa reprezentująca trwałe połączenie HiddenServera z Serverem'''
@@ -19,7 +20,8 @@ class HiddenServerConnection(asynchat.async_chat):
         self.set_terminator("\r\n")
         self.data = []
         self.response = {}
-        self.user = ""
+        self.user = "" # dorota
+        print self.user
         self.writeThread = threading.Thread(target=self.writeLoop)
         self.writeThread.daemon = True
         self.writeThread.start()
@@ -93,6 +95,8 @@ class HSServer(asyncore.dispatcher):
             self.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.bind(("", port))
         self.listen(5)
+        self.myname = "hs" + str(random.randint(1, 1000000)) # dorota
+        print "Hidden Server name is " + self.myname # dorota
 
     def handle_accept(self):
         p = self.accept()
@@ -100,6 +104,7 @@ class HSServer(asyncore.dispatcher):
             return
         conn, addr = p
         h = HiddenServerConnection(conn)
+       
         
 def startHSServer():
     s = HSServer(8888, reuseAddress=True) # Nie jestem pewien, czy w końcowym kodzie powinno być reuseAddress, ale do debugowania się nada
