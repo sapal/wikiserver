@@ -104,6 +104,7 @@ class HSServer(asyncore.dispatcher):
             return
         conn, addr = p
         h = HiddenServerConnection(conn)
+        h.push('MYNAMEIS:' + self.myname + '\r\n')
        
         
 def startHSServer():
