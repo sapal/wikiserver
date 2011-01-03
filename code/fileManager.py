@@ -51,13 +51,16 @@ class FileManager :
         """ zwraca FileInfo odpowiedniego plkiu """
         info = FileInfo()
         if path.strip() == "/":
+            print '************************************* ASK FOR USERS' # dorota
             f = open("users","w")
             for user in self.hiddenServerConnections.keys():
+                print 'there is' + user                                 # dorota
                 f.write(user+"\n")
             f.close()
             info.filename = "users"
             info.fileType = "directory"
             info.size = info.currentSize = os.path.getsize(info.filename)
+            print '********************************************* END'   # dorota
         else:
             try:
                 path = path[1:]
