@@ -20,7 +20,7 @@ class HiddenServer(asyncore.dispatcher):
     def handle_close(self):
         done_fun()
         self.close()
-    def hanlde_read(self):
+    def handle_read(self):
         print self.recv(8192)
     def writable(self):
         return (len(self.buffer) > 0)
