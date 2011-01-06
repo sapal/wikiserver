@@ -21,6 +21,7 @@ class HiddenServerConnection(asynchat.async_chat):
         self.response = {}
         self.user = "" 
         print self.user
+        print self.path
         self.writeThread = threading.Thread(target=self.writeLoop)
         self.writeThread.daemon = True
         self.writeThread.start()
@@ -46,24 +47,29 @@ class HiddenServerConnection(asynchat.async_chat):
         self.data.append(data)
 
     def processResponse(self):
+        print 'processRespone'
         global fileManager
         r = self.response
         self.response = {}
         if HiddenServerConnection.dbg:
             print(r)
+            print 'to byl debug'
         if r['response'] == "MYNAMEIS":
+            print 'mynameis'
             self.user = r['username'].strip()
             fileManager.hiddenServerConnections[self.user] = self
             self.push('Hello ' + self.user + 'i am your master')
             print 'Got him!'
             return
         else:
+            print 'else czyli nie mynameis'
             request, info = self.sendRequests.get()
             fileManager.processResponse(request['id'], r, info)
             c = request['answerCondition']
             c.acquire()
             c.notify()
             c.release()
+        print 'endof'    
 
     def handle_error(self):
         pass
@@ -77,10 +83,16 @@ class HiddenServerConnection(asynchat.async_chat):
         if data.strip() in HiddenServerConnection.responses:
             self.response['response'] = data.strip()
         else:
+            self.response = {} # dorota
             colon = data.find(":")
-            field = data[:colon].lower().strip()
+            field = data[:colon].upper().strip() # dorota: jeszcze nie wiem ale imo upper 
             value = data[colon+1:]
             self.response[field] = value
+            print field, value
+            self.response['response'] = field # dorota
+            if field == 'MYNAMEIS':
+                self.response['username'] = value
+        self.processResponse()   # dorota 
 
     def handle_close(self):
         print "Close"
