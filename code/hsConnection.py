@@ -7,7 +7,6 @@ import asynchat, asyncore
 import socket
 from Queue import Queue
 import base64
-import random # dorota
 
 class HiddenServerConnection(asynchat.async_chat):
     '''Klasa reprezentująca trwałe połączenie HiddenServera z Serverem'''
@@ -20,7 +19,7 @@ class HiddenServerConnection(asynchat.async_chat):
         self.set_terminator("\r\n")
         self.data = []
         self.response = {}
-        self.user = "" # dorota
+        self.user = "" 
         print self.user
         self.writeThread = threading.Thread(target=self.writeLoop)
         self.writeThread.daemon = True
@@ -43,7 +42,7 @@ class HiddenServerConnection(asynchat.async_chat):
                 base64.b64encode(request['originalRequest']), **request) )
 
     def collect_incoming_data(self, data):
-        #print "DATA: "+data
+        print "INCOMING DATA: "+data
         self.data.append(data)
 
     def processResponse(self):
@@ -55,6 +54,8 @@ class HiddenServerConnection(asynchat.async_chat):
         if r['response'] == "MYNAMEIS":
             self.user = r['username'].strip()
             fileManager.hiddenServerConnections[self.user] = self
+            self.push('Hello ' + self.user + 'i am your master')
+            print 'Got him!'
             return
         else:
             request, info = self.sendRequests.get()
@@ -95,8 +96,6 @@ class HSServer(asyncore.dispatcher):
             self.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.bind(("", port))
         self.listen(5)
-        self.myname = "hs" + str(random.randint(1, 1000000)) # dorota
-        print "Hidden Server name is " + self.myname # dorota
 
     def handle_accept(self):
         p = self.accept()
@@ -104,12 +103,10 @@ class HSServer(asyncore.dispatcher):
             return
         conn, addr = p
         h = HiddenServerConnection(conn)
-        h.push('MYNAMEIS:' + self.myname + '\r\n')
-       
         
 def startHSServer():
     s = HSServer(8888, reuseAddress=True) # Nie jestem pewien, czy w końcowym kodzie powinno być reuseAddress, ale do debugowania się nada
-    print("Starring HSServer.")
+    print("Starting HSServer.")
     asyncore.loop()
 
 class PushFileConnection(asynchat.async_chat):
