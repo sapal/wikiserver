@@ -58,7 +58,7 @@ class HiddenServerConnection(asynchat.async_chat):
             print 'mynameis'
             self.user = r['username'].strip()
             fileManager.hiddenServerConnections[self.user] = self
-            self.push('Hello ' + self.user + 'i am your master')
+            self.push('Hello ' + r['username'].strip() + ' i am your master')
             print 'Got him!'
             return
         else:
