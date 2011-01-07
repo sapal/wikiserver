@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 # coding=utf-8
 
 import random
@@ -13,7 +14,7 @@ class HiddenServer(asyncore.dispatcher):
         self.connect( (host, 8888))
         self.myname = myname
         print "Hello. My name is " + self.myname
-        self.buffer = 'MYNAMEIS:' + self.myname + '\r\n'
+        self.buffer = 'MYNAMEIS\nusername:' + self.myname + '\n\n'
         # print 'MYNAMEIS:' + self.myname + '\r\n'
     def handle_connect(self):
         pass
@@ -28,5 +29,5 @@ class HiddenServer(asyncore.dispatcher):
         sent = self.send(self.buffer)
         self.buffer = self.buffer[sent:]
 
-client = HiddenServer('localhost', '/', 'servus')
+client = HiddenServer('localhost', '/', 'servuś')
 asyncore.loop()
