@@ -20,8 +20,6 @@ class HiddenServerConnection(asynchat.async_chat):
         self.data = []
         self.response = {}
         self.user = "" 
-        print self.user
-        print self.path
         self.writeThread = threading.Thread(target=self.writeLoop)
         self.writeThread.daemon = True
         self.writeThread.start()
@@ -29,14 +27,16 @@ class HiddenServerConnection(asynchat.async_chat):
     def writeLoop(self):
         global fileManager
         while True:
+            print("WRITE LOOP")
             request = self.requestQueue.get()
-            filename = (self.user+"/"+request['filename']).replace("/",".")
+            print("GOT REQUEST")
+            filename = fileManager.getFilename(request['filename'], user=self.user, id=request['id'])
             if filename in fileManager.fileInfo:
                 info = fileManager.fileInfo[filename]
             else:
                 info = fm.FileInfo()
             request['modifyTime'] = info.modifyTime
-            print(self.user+str(request))
+            print('REQUEST: '+self.user+' '+str(request))
             self.sendRequests.put((request, info))
             self.push("GET\n")
             self.push("filename:{filename}\nmodifyTime:{modifyTime}\nid:{id}\noriginalRequest:{0}\n".format(
