@@ -6,6 +6,7 @@ import threading
 import asynchat, asyncore
 import socket
 from Queue import Queue
+from helper import parseData
 import base64
 
 class HiddenServerConnection(asynchat.async_chat):
@@ -16,7 +17,7 @@ class HiddenServerConnection(asynchat.async_chat):
         asynchat.async_chat.__init__(self, sock)
         self.requestQueue = Queue()
         self.sendRequests = Queue()
-        self.set_terminator("\r\n")
+        self.set_terminator("\n\n")
         self.data = []
         self.response = {}
         self.user = "" 
@@ -43,7 +44,7 @@ class HiddenServerConnection(asynchat.async_chat):
                 base64.b64encode(request['originalRequest']), **request) )
 
     def collect_incoming_data(self, data):
-        print "INCOMING DATA: "+data
+        #print "INCOMING DATA: "+data
         self.data.append(data)
 
     def processResponse(self):
@@ -77,21 +78,7 @@ class HiddenServerConnection(asynchat.async_chat):
     def found_terminator(self):
         data = "".join(self.data)
         self.data = []
-        if data.strip() == "":
-            self.processResponse()
-            return
-        if data.strip() in HiddenServerConnection.responses:
-            self.response['response'] = data.strip()
-        else:
-            self.response = {} # dorota
-            colon = data.find(":")
-            field = data[:colon].upper().strip() # dorota: jeszcze nie wiem ale imo upper 
-            value = data[colon+1:]
-            self.response[field] = value
-            print field, value
-            self.response['response'] = field # dorota
-            if field == 'MYNAMEIS':
-                self.response['username'] = value
+        self.response = parseData(data)
         self.processResponse()   # dorota 
 
     def handle_close(self):
@@ -128,7 +115,7 @@ Zapisuje dane do odpowiedniego pliku i przy każdym zapisie wywołuje sizeChange
     def __init__(self, sock):
         asynchat.async_chat.__init__(self, sock)
         self.BUFFER_SIZE = 10
-        self.set_terminator("\n")
+        self.set_terminator("\n\n")
         self.data = []
         self.header = {}
         self.reciveData = False
@@ -165,19 +152,14 @@ Zapisuje dane do odpowiedniego pliku i przy każdym zapisie wywołuje sizeChange
             self.fileInfo.sizeChanged(self.recived)
             self.set_terminator(min(self.BUFFER_SIZE,self.length - self.recived))
             return
-        colon = data.find(':')
-        field = data[:colon].lower().strip()
-        value = data[colon+1:]
-        if field == "":
-            self.formatHeader()
-            self.set_terminator(min(self.BUFFER_SIZE,self.length - self.recived))
-            self.fileInfo = fileManager.requestInfo[self.header['id']]
-            self.fileInfo.fileType = self.header['filetype']
-            self.fileInfo.size = self.header['length']
-            self.file = open(self.fileInfo.filename, 'w')
-            self.reciveData = True
-        else:
-            self.header[field] = value
+        self.header = parseData(data)
+        self.formatHeader()
+        self.set_terminator(min(self.BUFFER_SIZE,self.length - self.recived))
+        self.fileInfo = fileManager.requestInfo[self.header['id']]
+        self.fileInfo.fileType = self.header['filetype']
+        self.fileInfo.size = self.header['length']
+        self.file = open(self.fileInfo.filename, 'w')
+        self.reciveData = True
 
     def handle_close(self):
         if PushFileConnection.dbg:print "PFC:Close"

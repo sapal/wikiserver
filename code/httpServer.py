@@ -39,7 +39,7 @@ class HttpRequest(BaseHTTPRequestHandler):
                     info.fileModified.acquire()
                     info.fileModified.wait()
                     info.fileModified.release()
-                self.wfile.write("<html><head></head><body><ul>\n")
+                self.wfile.write('<html><head><meta http-equiv="content-type" content="text/html; charset=utf-8"/></head><body><ul>\n')
                 for line in f:
                     self.wfile.write('<li><a href="{0}/{2}">{1}</a></li>\n'.format(self.path, line.strip(), quote(line.strip())))
                 self.wfile.write("</body></html>\n")
