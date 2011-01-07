@@ -9,6 +9,7 @@ class FileInfo :
         self.modifyTime = 0 
         self.size = -1 # to oznacza, że PushFileConnection jeszcze się nie podłączyło
         self.currentSize = 0
+        self.path = "" # bezwzględna ścieżka do pliku
         self.filename = ""
         self.fileModified = threading.Condition()
         self.fileType = "not found"
@@ -20,10 +21,9 @@ class FileInfo :
         self.modifyTime = newTime
         #with fileManager.fileInfoLock:
         fileManager.fileInfoLock.acquire()
-        filename = fileManager.removeId(self.filename)
-        if (filename not in fileManager.fileInfo 
-                or self.modifyTime > fileManager.fileInfo[filename].modifyTime):
-            fileManager.fileInfo[filename] = self
+        if (self.path not in fileManager.fileInfo 
+                or self.modifyTime > fileManager.fileInfo[path].modifyTime):
+            fileManager.fileInfo[path] = self
         fileManager.fileInfoLock.release()
 
     def sizeChanged (self, newSize) :
@@ -65,15 +65,15 @@ class FileManager :
         if path[0] == '/':
             path = path[1:]
         if len(path) > 0 and path[-1] == '/':
-            path = path[-1]
+            path = path[:-1]
         return path
 
-    def getRelativeFilename(self, path):
+    def getRelativePath(self, path):
         """Zwraca względną (odpowiednią do przekazania HiddenServerowi)
         nazwę pliku."""
         path = self._stripPath(path)
         slash = path.find('/')
-        return (path[slash+1:] if slash != -1 else "")
+        return (path[slash:] if slash != -1 else "/")
 
     def getFilename(self, path, user=None, id=None):
         """Zwraca nazwę pliku (na dysku Servera) 
@@ -87,7 +87,7 @@ class FileManager :
             return 'cache/users' #users to specjalny plik, w którym wylistowani są aktywni użytkownicy
         if user is None:
         	user = self.getUser(path)
-        	path = self.getRelativeFilename(path)
+        	path = self.getRelativePath(path)
         path = path.replace('/','.')
         if id is None:
             id = self.fileInfo['{user}.{path}'.format(user=user, path=path)]
@@ -119,17 +119,17 @@ class FileManager :
         else:
             try:
                 self.requestInfo[id] = FileInfo()
+                self.requestInfo[id].path = path
                 self.requestInfo[id].filename = filename
                 print("getFileInfo({0}), sending request".format(filename))
                 cond = threading.Condition()
                 cond.acquire()
                 user = self.getUser(path)
                 self.hiddenServerConnections[user].requestQueue.put({
-                    'filename':filename,
+                    'filename':self.getRelativePath(path),
                     'id':id,
                     'originalRequest':originalRequest,
                     'answerCondition':cond})
-                print("PUT REQUEST")
                 cond.wait()
                 cond.release()
                 print("getFileInfo({0}), request completed".format(filename))
