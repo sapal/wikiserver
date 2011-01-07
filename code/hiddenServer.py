@@ -3,6 +3,8 @@
 
 import random
 import asyncore, socket
+from helper import parseData
+import os
 
 def done_fun():
     print 'byebye'
@@ -16,18 +18,68 @@ class HiddenServer(asyncore.dispatcher):
         print "Hello. My name is " + self.myname
         self.buffer = 'MYNAMEIS\nusername:' + self.myname + '\n\n'
         # print 'MYNAMEIS:' + self.myname + '\r\n'
+        self.data = []
     def handle_connect(self):
         pass
     def handle_close(self):
         done_fun()
         self.close()
     def handle_read(self):
-        print self.recv(8192)
+        got = self.recv(8192)
+        self.data.append(got)
+        if got.find('\r\n') != -1:
+            self.processRequest()
     def writable(self):
         return (len(self.buffer) > 0)
     def handle_write(self):
         sent = self.send(self.buffer)
         self.buffer = self.buffer[sent:]
-
+    def processRequest(self):
+        request = "".join(self.data)
+        self.data = []
+        terminator = request.find('\r\n')
+        self.data.append(request[terminator+2:])
+        request = request[:terminator]
+        self.req = parseData(request)
+        print self.req
+        if(self.req['response'] == 'GET'):
+            self.answerToGet()
+        print 'dooooooooooooooooooooooooooone'
+    def answerToGet(self):
+        filename = self.req['filename']
+        if(filename == '/'):
+            print 'ls of main catalogue'
+            self.answerToLsMain()
+            return
+        filename = filename[1:]
+        print 'filename ' + filename
+        if os.path.exists(filename) == False:
+            print 'No such path'
+            return
+        print 'Ok path'
+        if(os.path.isfile(filename)):
+            self.answerToFile(filename)
+            return
+        if(os.path.isdir(filename)):
+            self.answerToDir(filename)
+            return
+            
+        # TODO
+    def answerToLsMain(self):
+        # TODO
+        print 'main ls'
+        pass
+    def answerToFile(self, filename):
+        if('date' in self.req):
+            if(self.req['data'] + 100 < str(os.path.getmtime(filename))):
+                self.buffer += 'OK\nid:' + self.req['id'] + '\n\n'
+                return
+        self.buffer += 'OLD\nid:' + self.req['id'] + '\nsize:'
+        self.buffer += str(os.path.getsize(filename)) + '\n'
+        self.buffer += 'type:file\n\n'
+        # to do : actually start push file connection
+    def answerToDir(self, filename):
+        print 'get dir'
+        pass
 client = HiddenServer('localhost', '/', 'servuś')
 asyncore.loop()

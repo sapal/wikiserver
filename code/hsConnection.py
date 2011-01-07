@@ -40,7 +40,7 @@ class HiddenServerConnection(asynchat.async_chat):
             print('REQUEST: '+self.user+' '+str(request))
             self.sendRequests.put((request, info))
             self.push("GET\n")
-            self.push("filename:{filename}\nmodifyTime:{modifyTime}\nid:{id}\noriginalRequest:{0}\n".format(
+            self.push("filename:{filename}\nmodifyTime:{modifyTime}\nid:{id}\noriginalRequest:{0}\r\n".format(
                 base64.b64encode(request['originalRequest']), **request) )
 
     def collect_incoming_data(self, data):
@@ -59,7 +59,7 @@ class HiddenServerConnection(asynchat.async_chat):
             print 'mynameis'
             self.user = r['username'].strip()
             fileManager.hiddenServerConnections[self.user] = self
-            self.push('Hello ' + r['username'].strip() + ' i am your master')
+            self.push('Hello ' + r['username'].strip() + ' i am your master\r\n')
             print 'Got him!'
             return
         else:
