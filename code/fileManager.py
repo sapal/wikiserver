@@ -7,20 +7,23 @@ class FileInfo :
     '''Klasa odpowiedzialna za dostarczanie informacji o plikach'''
     def __init__(self) :
         self.modifyTime = 0 
-        self.size = 0 
+        self.size = -1 # to oznacza, że PushFileConnection jeszcze się nie podłączyło
         self.currentSize = 0
         self.filename = ""
         self.fileModified = threading.Condition()
         self.fileType = "not found"
 
     def setModifyTime(self, newTime):
+        """Zmienia czas modyfikacji FileInfo uaktualniając
+        fileManager.fileInfo."""
         global fileManager
         self.modifyTime = newTime
         #with fileManager.fileInfoLock:
         fileManager.fileInfoLock.acquire()
-        if (self.filename not in fileManager.fileInfo 
-                or self.modifyTime > fileManager.fileInfo[self.filename].modifyTime):
-            fileManager.fileInfo[self.filename] = self
+        filename = fileManager.removeId(self.filename)
+        if (filename not in fileManager.fileInfo 
+                or self.modifyTime > fileManager.fileInfo[filename].modifyTime):
+            fileManager.fileInfo[filename] = self
         fileManager.fileInfoLock.release()
 
     def sizeChanged (self, newSize) :
@@ -41,49 +44,95 @@ class FileManager :
         self.idLock = threading.Lock()
 
     def nextRequestId(self):
+        """Zwraca następne id dla zapytania."""
         self.idLock.acquire()
         self.lastRequestId += 1
         id = self.lastRequestId
         self.idLock.release()
         return id
+    
+    def removeId(self, filename):
+        """Usuwa id z ścieżki do pliku
+        (żeby można było użyć jej jako klucza w self.fileInfo."""
+        if filename == 'cache/users':
+            return 'users'
+        dot = filename.find('.')
+        return filename[dot+1:]
 
-    def getFileInfo (self, path, originalRequest) :
+    def _stripPath(self, path):
+        """Usuwa zbędne spacje/slashe ze ścieżki."""
+        path = path.strip()
+        if path[0] == '/':
+            path = path[1:]
+        if len(path) > 0 and path[-1] == '/':
+            path = path[-1]
+        return path
+
+    def getRelativeFilename(self, path):
+        """Zwraca względną (odpowiednią do przekazania HiddenServerowi)
+        nazwę pliku."""
+        path = self._stripPath(path)
+        slash = path.find('/')
+        return (path[slash+1:] if slash != -1 else "")
+
+    def getFilename(self, path, user=None, id=None):
+        """Zwraca nazwę pliku (na dysku Servera) 
+        o ścieżce path. Jeżeli user jest ustawione, to 
+        ścieżka jest względna (czyli prawdziwa ścieżka to /user[/]path).
+        Jeśli id jest ustawione, zwracana jest nazwa pliku dla konkretnego
+        zapytania, wpp nazwa najpóźniej zmodyfikowanej wersji tego pliku.
+        """
+        path = self._stripPath(path)
+        if path == '':
+            return 'cache/users' #users to specjalny plik, w którym wylistowani są aktywni użytkownicy
+        if user is None:
+        	user = self.getUser(path)
+        	path = self.getRelativeFilename(path)
+        path = path.replace('/','.')
+        if id is None:
+            id = self.fileInfo['{user}.{path}'.format(user=user, path=path)]
+        return "cache/{id}.{user}.{path}".format(id=id, user=user, path=path)
+
+    def getUser(self, path):
+        """Zwraca nazwę użytkownika na podstawie ścieżki (bezwzględnej)."""
+        path = self._stripPath(path)
+        slash = path.find('/')
+        return (path[:slash] if slash != -1 else path)
+
+
+    def getFileInfo (self, path, originalRequest):
         """ zwraca FileInfo odpowiedniego plkiu """
         info = FileInfo()
-        if path.strip() == "/":
+        id = self.nextRequestId()
+        filename = self.getFilename(path, id=id)
+        if filename == "cache/users":
             print '************************************* ASK FOR USERS' # dorota
-            f = open("users","w")
+            f = open(filename,"w")
             for user in self.hiddenServerConnections.keys():
                 print 'there is' + user                                 # dorota
                 f.write(user+"\n")
             f.close()
-            info.filename = "users"
+            info.filename = filename
             info.fileType = "directory"
             info.size = info.currentSize = os.path.getsize(info.filename)
             print '********************************************* END'   # dorota
         else:
             try:
-                path = path[1:]
-                if path[-1] == '/':
-                    path = path[:-1]
-                slash = path.find('/')
-                user = path[:slash] if slash != -1 else path
-                filename = path[slash+1:] if slash != -1 else ""
-                id = self.nextRequestId()
                 self.requestInfo[id] = FileInfo()
-                self.requestInfo[id].filename = (user+"/"+filename).replace("/",'.')
-                self.requestInfo[id].size = -1
-                print("getFileInfo({0}/{1}), sending request".format(user,filename))
+                self.requestInfo[id].filename = filename
+                print("getFileInfo({0}), sending request".format(filename))
                 cond = threading.Condition()
                 cond.acquire()
+                user = self.getUser(path)
                 self.hiddenServerConnections[user].requestQueue.put({
                     'filename':filename,
                     'id':id,
                     'originalRequest':originalRequest,
                     'answerCondition':cond})
+                print("PUT REQUEST")
                 cond.wait()
                 cond.release()
-                print("getFileInfo({0}/{1}), request completed".format(user,filename))
+                print("getFileInfo({0}), request completed".format(filename))
                 info = self.requestInfo[id]
                 #Wait for PushFileConnection to establish:
                 info.fileModified.acquire()
