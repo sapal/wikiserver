@@ -129,6 +129,7 @@ Zapisuje dane do odpowiedniego pliku i przy każdym zapisie wywołuje sizeChange
         self.fileInfo = None
 
     def collect_incoming_data(self, data):
+        debug('incoming data + | + ' + data)
         self.data.append(data)
 
     def handle_error(self):
@@ -189,6 +190,7 @@ class PushFileServer(asyncore.dispatcher):
             return
         conn, addr = p
         PushFileConnection(conn)
+        debug('got new connection')
         
 def startPushFileServer():
     print("Starting PushFileServer")

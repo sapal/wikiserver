@@ -6,6 +6,8 @@ import asyncore, socket
 from helper import parseData
 import os
 import threading
+import datetime
+import time
 
 def done_fun():
     print 'byebye'
@@ -62,20 +64,27 @@ class HiddenServer(asyncore.dispatcher):
             return
         print 'Ok path'
         if(os.path.isfile(filename)):
-            self.answerToFile(filename)
+            self.answerToFile(filename, filename)
             return
         if(os.path.isdir(filename)):
             self.answerToDir(filename)
             return
             
-        # TODO
     def answerToNope(self):
         self.buffer += 'NOPE\nid:' + self.req['id'] + '\n\n'
     def answerToLsMain(self):
-        # TODO
         print 'main ls'
-        pass
-    def answerToFile(self, filename):
+        tmpfile = 'hiddenServerWorkingFile' + str(random.randint(10000, 1000000)) + str(datetime.datetime.now())
+        print tmpfile
+        f = open(tmpfile, "w")
+        for line in os.listdir("."):
+            f.write(line + "\n")
+        f.close()                
+        self.answerToFile(tmpfile, '/')
+        # TO DO : LOCK !!!
+        time.sleep(5)
+        os.remove(tmpfile)
+    def answerToFile(self, filename, fakeFilename):
         print 'its a file'
         if('date' in self.req):
             if(self.req['data'] + 100 < str(os.path.getmtime(filename))):
@@ -85,19 +94,28 @@ class HiddenServer(asyncore.dispatcher):
         self.buffer += str(os.path.getsize(filename)) + '\n'
         self.buffer += 'type:file\n\n'
         print 'new thread?'
-        newThreadPushFile(self.host, filename, 'file', self.req['id'])
+        newThreadPushFile(self.host, filename, fakeFilename, 'file', self.req['id'])
     def answerToDir(self, filename):
         print 'get dir'
-        pass
-
+        tmpfile = 'hiddenServerWorkingFile' + str(random.randint(10000, 1000000)) + str(datetime.datetime.now())
+        f = open(tmpfile, "w")
+        for line in os.listdir(filename):
+            f.write(line + "\n")
+        f.close()                
+        self.answerToFile(tmpfile, filename)
+        # TO DO : LOCK !!!
+        time.sleep(5)
+        os.remove(tmpfile)
+        
 class PushFileConnectionClient(asyncore.dispatcher):
-    def __init__(self, host, filename, typ, id):
+    def __init__(self, host, filename, fakeFilename, typ, id):
         print 'hello init'
         self.buffer = ""
         asyncore.dispatcher.__init__(self)
         self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
         self.connect( (host, 9999))
         self.filename = filename
+        self.fakeFilename = filename
         self.id = id
         self.typ = typ
         if(self.typ == 'file'):
@@ -116,25 +134,29 @@ class PushFileConnectionClient(asyncore.dispatcher):
         sent = self.send(self.buffer)
         self.buffer = self.buffer[sent:]
     def sendFile(self):
+        print 'sending file'
         self.buffer += 'PUSH\n'
         self.buffer += 'id:'+self.id+'\n'
         self.buffer += 'size:' + str(os.path.getsize(self.filename)) + '\n'
-        self.buffer += 'filename:' + self.filename + '\n'
+        self.buffer += 'filename:' + self.fakeFilename + '\n'
         self.buffer += 'type:' + self.typ + '\n\n'
         f = open(self.filename, "rb")
         data = f.read()
-        self.buffer += data
+        f.close()
+        self.buffer += data 
+        self.buffer += '\n'
 class HelperClass:
-    def __init__(self, host, filename, typ, id):
+    def __init__(self, host, filename, fakeFilename, typ, id):
         self.host = host
         self.filename = filename
         self.typ = typ
         self.id = id
+        self.fakeFilename = fakeFilename
     def startAndPushFile(self):
-        PushFileConnectionClient(self.host, self.filename, self.typ, self.id)
+        PushFileConnectionClient(self.host, self.filename, self.fakeFilename, self.typ, self.id)
         
-def newThreadPushFile(host, filename, typ, id):
-    hc = HelperClass(host, filename, typ, id)
+def newThreadPushFile(host, filename, fakeFilename, typ, id):
+    hc = HelperClass(host, filename, fakeFilename, typ, id)
     pfc = threading.Thread(target=hc.startAndPushFile)
     pfc.deamon = True
     pfc.start()
