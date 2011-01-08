@@ -39,6 +39,7 @@ class HiddenServer(asyncore.dispatcher):
         return (len(self.buffer) > 0)
     def handle_write(self):
         sent = self.send(self.buffer)
+        print("HS: sent:"+str(self.buffer[:sent]))
         self.buffer = self.buffer[sent:]
     def processRequest(self):
         request = "".join(self.data)
@@ -133,6 +134,7 @@ class PushFileConnectionClient(socket.socket):
         self.buffer += 'filename:' + self.fakeFilename + '\n'
         self.buffer += 'type:' + self.typ + '\n'
         self.buffer += 'modifytime:0\n\n' #TODO:zrobić
+        self.sendBuffer()
         f = open(self.filename, "rb")
         data = f.read()
         self.buffer += data

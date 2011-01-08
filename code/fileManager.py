@@ -44,6 +44,7 @@ class FileInfo :
         """Zaczynam pracę z tym FileInfo,
         proszę go nie usuwać."""
         global fileManager
+        #print("startUsing" + str(self))
         with fileManager.requestInfoLock:
             with self.usingLock:
                 self.usersCount += 1
@@ -54,6 +55,7 @@ class FileInfo :
         """Skończyłem pracę z tym FileInfo,
         już mi nie jest potrzebne."""
         global fileManager
+        #print("stopUsing" + str(self))
         with fileManager.requestInfoLock:
             with self.usingLock:
                 self.usersCount -= 1
@@ -79,12 +81,15 @@ class FileManager :
                 toRemove = sorted([(id,f) for (id,f) in fileInfos if f.usersCount == 0], 
                         key=lambda (id,f):(f.modifyTime - f.lastUse - f.useCount*120))
                 for id,f in toRemove:
-                    del self.requestInfo[id]
-                    if f in self.fileInfo[f.path]:
-                        del self.fileInfo[f]
-                    totalSize -= f.size
-                    if totalSize <= cacheMax:
-                        break
+                    try:
+                        del self.requestInfo[id]
+                        if f.path in self.fileInfo:
+                            del self.fileInfo[f]
+                        totalSize -= f.size
+                        if totalSize <= cacheMax:
+                            break
+                    except BaseException as e:
+                        print(e)
 
     def startUsingFileInfo(self, filename):
         """Zwraca fileInfo pliku filename (ścieżka bezwzględna)
@@ -198,7 +203,7 @@ class FileManager :
                 self.requestInfo[requestId] = fileInfo
             elif HSresponse['response'] == 'OLD':
                 self.requestInfo[requestId].setModifyTime(int(HSresponse['modifytime']))
-            self.cleanCache()
             self.requestInfo[requestId].startUsing()
+            self.cleanCache()
 
 fileManager = FileManager()
