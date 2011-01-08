@@ -12,6 +12,7 @@ def done_fun():
 
 class HiddenServer(asyncore.dispatcher):
     def __init__(self, host, path, myname):
+        self.buffer = ""
         asyncore.dispatcher.__init__(self)
         self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
         self.host = host
@@ -92,10 +93,10 @@ class HiddenServer(asyncore.dispatcher):
 class PushFileConnectionClient(asyncore.dispatcher):
     def __init__(self, host, filename, typ, id):
         print 'hello init'
+        self.buffer = ""
         asyncore.dispatcher.__init__(self)
         self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
         self.connect( (host, 9999))
-        self.buffer = ""
         self.filename = filename
         self.id = id
         self.typ = typ
@@ -119,7 +120,7 @@ class PushFileConnectionClient(asyncore.dispatcher):
         self.buffer += 'id:'+self.id+'\n'
         self.buffer += 'size:' + str(os.path.getsize(self.filename)) + '\n'
         self.buffer += 'filename:' + self.filename + '\n'
-        self.buffer += 'type' + self.typ + '\n\n'
+        self.buffer += 'type:' + self.typ + '\n\n'
         f = open(self.filename, "rb")
         data = f.read()
         self.buffer += data
