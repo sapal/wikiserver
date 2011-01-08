@@ -1,5 +1,7 @@
 syntax: glob
 auto
+*.pyc
+*.eps
 .*.swp
 *~
 *.aux

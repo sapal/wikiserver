@@ -7,6 +7,7 @@ from SocketServer import ThreadingMixIn
 class HttpRequest(BaseHTTPRequestHandler):
     '''Klasa odpowiedzialna za obsługę HTTP'''
     def do_GET(self):
+        """Obsługa GET"""
         try:
             info = fileManager.getFileInfo(unquote(self.path), 
                     ' '.join([self.command,
