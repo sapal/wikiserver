@@ -19,7 +19,7 @@ class HiddenServerConnection(asynchat.async_chat):
     def __init__(self, sock):
         asynchat.async_chat.__init__(self, sock)
         self.requestQueue = Queue()
-        self.sendRequests = Queue()
+        self.sentRequests = Queue()
         self.set_terminator("\n\n")
         self.data = []
         self.response = {}
@@ -41,7 +41,7 @@ class HiddenServerConnection(asynchat.async_chat):
                 info = fileManager.startUsingFileInfo(path)
                 request['modifyTime'] = info.modifyTime
                 debug('REQUEST: '+self.user+' '+str(request))
-                self.sendRequests.put((request, info))
+                self.sentRequests.put((request, info))
             self.push("GET\n")
             self.push("filename:{filename}\nmodifyTime:{modifyTime}\nid:{id}\noriginalRequest:{0}\r\n".format(
                 base64.b64encode(request['originalRequest']), **request) )
@@ -68,7 +68,7 @@ class HiddenServerConnection(asynchat.async_chat):
         else:
             debug('else czyli nie mynameis')
             with self.stopLock:
-                request, info = self.sendRequests.get()
+                request, info = self.sentRequests.get()
                 fileManager.processResponse(request['id'], r, info)
                 c = request['answerCondition']
                 with c:
@@ -89,8 +89,8 @@ class HiddenServerConnection(asynchat.async_chat):
         with self.stopLock:
             debug("Close")
             self.close()
-            while not self.sendRequests.empty():
-                r,info = self.sendRequests.get(False)
+            while not self.sentRequests.empty():
+                r,info = self.sentRequests.get(False)
                 info.stopUsing()
             if self.user != "":
                 del fileManager.hiddenServerConnections[self.user]

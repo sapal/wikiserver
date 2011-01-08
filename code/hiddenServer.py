@@ -139,7 +139,7 @@ class PushFileConnectionClient(socket.socket):
         data = f.read()
         self.buffer += data
         self.sendBuffer()
-        print("SENDED")
+        print("SENT")
         
 def newThreadPushFile(host, filename, fakeFilename, typ, id):
     pfc = PushFileConnectionClient(host, filename, fakeFilename, typ, id)
