@@ -33,7 +33,8 @@ class HiddenServer(asyncore.dispatcher):
     def handle_read(self):
         got = self.recv(8192)
         self.data.append(got)
-        if got.find('\r\n') != -1:
+        print(self.data)
+        if (got.find('\n\n') != -1 or (len(self.data) > 0 and self.data[-1][-1] == '\n' and got[0] == '\n')):
             self.processRequest()
     def writable(self):
         return (len(self.buffer) > 0)
@@ -44,7 +45,7 @@ class HiddenServer(asyncore.dispatcher):
     def processRequest(self):
         request = "".join(self.data)
         self.data = []
-        terminator = request.find('\r\n')
+        terminator = request.find('\n\n')
         self.data.append(request[terminator+2:])
         request = request[:terminator]
         self.req = parseData(request)
@@ -135,6 +136,7 @@ class PushFileConnectionClient(socket.socket):
         data = f.read()
         self.buffer += data
         self.sendBuffer()
+        self.close()
         if(self.typ == 'directory'):
             os.remove(self.filename)
         print("SENT")

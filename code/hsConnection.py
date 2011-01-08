@@ -16,8 +16,8 @@ from logging import basicConfig, debug, DEBUG
 class HiddenServerConnection(asynchat.async_chat):
     '''Klasa reprezentująca trwałe połączenie HiddenServera z Serverem'''
     responses = ["OK", "OLD", "MYNAMEIS"]
-    def __init__(self, sock):
-        asynchat.async_chat.__init__(self, sock)
+    def __init__(self, sock, map=None):
+        asynchat.async_chat.__init__(self, sock, map=map)
         self.requestQueue = Queue()
         self.sentRequests = Queue()
         self.set_terminator("\n\n")
@@ -43,7 +43,7 @@ class HiddenServerConnection(asynchat.async_chat):
                 debug('REQUEST: '+self.user+' '+str(request))
                 self.sentRequests.put((request, info))
             self.push("GET\n")
-            self.push("filename:{filename}\nmodifyTime:{modifyTime}\nid:{id}\noriginalRequest:{0}\r\n".format(
+            self.push("filename:{filename}\nmodifyTime:{modifyTime}\nid:{id}\noriginalRequest:{0}\n\n".format(
                 base64.b64encode(request['originalRequest']), **request) )
 
     def collect_incoming_data(self, data):
@@ -62,7 +62,7 @@ class HiddenServerConnection(asynchat.async_chat):
             debug('mynameis')
             self.user = r['username'].strip()
             fileManager.hiddenServerConnections[self.user] = self
-            self.push('Hello ' + r['username'].strip() + ' i am your master\r\n')
+            self.push('Hello ' + r['username'].strip() + ' i am your master\n\n')
             debug('Got him!')
             return
         else:
@@ -99,8 +99,9 @@ class HiddenServerConnection(asynchat.async_chat):
 class HSServer(asyncore.dispatcher):
     '''Klasa odpowiedzialna za tworzenie HiddenServerConnectionów'''
 
-    def __init__(self, port, reuseAddress=False):
-        asyncore.dispatcher.__init__(self)
+    def __init__(self, port, reuseAddress=False, map=None):
+        asyncore.dispatcher.__init__(self, None, map)
+        self.map = map
         self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
         if reuseAddress:
             self.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -108,23 +109,26 @@ class HSServer(asyncore.dispatcher):
         self.listen(5)
 
     def handle_accept(self):
+        print("ACCEPT")
         p = self.accept()
         if not p:
             return
         conn, addr = p
-        HiddenServerConnection(conn)
+        HiddenServerConnection(conn, self.map)
         
 def startHSServer():
-    HSServer(8888, reuseAddress=True) # Nie jestem pewien, czy w końcowym kodzie powinno być reuseAddress, ale do debugowania się nada
+    m = {}
+    HSServer(8888, reuseAddress=True, map=m) # Nie jestem pewien, czy w końcowym kodzie powinno być reuseAddress, ale do debugowania się nada
     print("Starting HSServer.")
-    asyncore.loop()
+    asyncore.loop(map=m)
 
 class PushFileConnection(asynchat.async_chat):
     '''Klasa reprezentująca połączenie przesyłające plik z HiddenServera do Servera.
 Zapisuje dane do odpowiedniego pliku i przy każdym zapisie wywołuje sizeChanged()'''
-    def __init__(self, sock):
-        asynchat.async_chat.__init__(self, sock)
-        self.BUFFER_SIZE = 1024
+    ac_in_buffer_size = 32*1024
+    def __init__(self, sock, map=None):
+        asynchat.async_chat.__init__(self, sock=sock, map=map)
+        self.BUFFER_SIZE = 16*1024
         self.set_terminator("\n\n")
         self.data = []
         self.header = {}
@@ -168,11 +172,11 @@ Zapisuje dane do odpowiedniego pliku i przy każdym zapisie wywołuje sizeChange
             self.fileInfo.sizeChanged(self.recived)
             if self.length == self.recived:
                 debug("OK")
-                self.handle_close()
+                #self.handle_close()
                 return
             term = min(self.BUFFER_SIZE,self.length - self.recived)
-            debug("New terminator: " +str(term) + str((self.recived, self.length)))
             self.set_terminator(term)
+            debug("New terminator: " +str(term) + str((self.recived, self.length)))
             return
         self.header = parseData(data)
         self.formatHeader()
@@ -193,8 +197,9 @@ Zapisuje dane do odpowiedniego pliku i przy każdym zapisie wywołuje sizeChange
 class PushFileServer(asyncore.dispatcher):
     '''Klasa odpowiedzialna za tworzenie PushFileConnectionów'''
 
-    def __init__(self, port, reuseAddress=False):
-        asyncore.dispatcher.__init__(self)
+    def __init__(self, port, reuseAddress=False, map=None):
+        asyncore.dispatcher.__init__(self, map=map)
+        self.map = map
         self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
         if reuseAddress:
             self.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -206,9 +211,10 @@ class PushFileServer(asyncore.dispatcher):
         if not p:
             return
         conn, addr = p
-        PushFileConnection(conn)
+        PushFileConnection(conn, map=self.map)
         
 def startPushFileServer():
     print("Starting PushFileServer")
-    PushFileServer(9999, reuseAddress=True) # Nie jestem pewien, czy w końcowym kodzie powinno być reuseAddress, ale do debugowania się nada
-    asyncore.loop()
+    m = {}
+    PushFileServer(9999, reuseAddress=True, map=m) # Nie jestem pewien, czy w końcowym kodzie powinno być reuseAddress, ale do debugowania się nada
+    asyncore.loop(map=m)
