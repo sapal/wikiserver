@@ -40,6 +40,7 @@ class HttpRequest(BaseHTTPRequestHandler):
                     chunk = f.read(min(chunkSize, info.currentSize-written))
                     written += len(chunk)
                     self.wfile.write(chunk)
+                    #debug("HTTP: "+str(written))
                     #debug(chunk)
             elif info.fileType == "directory":
                 if self.path[-1] == '/':

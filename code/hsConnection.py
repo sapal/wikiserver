@@ -36,9 +36,9 @@ class HiddenServerConnection(asynchat.async_chat):
         while True:
             request = self.requestQueue.get()
             debug("GOT REQUEST")
-            filename = fileManager.getFilename(request['filename'], user=self.user, id=request['id'])
+            path = self.user + request['filename']
             with self.stopLock:
-                info = fileManager.startUsingFileInfo(filename)
+                info = fileManager.startUsingFileInfo(path)
                 request['modifyTime'] = info.modifyTime
                 debug('REQUEST: '+self.user+' '+str(request))
                 self.sendRequests.put((request, info))
@@ -77,7 +77,7 @@ class HiddenServerConnection(asynchat.async_chat):
         debug('endof')    
 
     def handle_error(self):
-        pass
+        debug("PFC:ERROR")
 
     def found_terminator(self):
         data = "".join(self.data)
@@ -162,13 +162,17 @@ Zapisuje dane do odpowiedniego pliku i przy każdym zapisie wywołuje sizeChange
         self.data = []
         if self.reciveData:
             self.recived += len(data)
+            debug("TERMINATOR: " +str(self.recived))
             self.file.write(data)
             self.file.flush()
             self.fileInfo.sizeChanged(self.recived)
             if self.length == self.recived:
-                self.close()
+                debug("OK")
+                self.handle_close()
                 return
-            self.set_terminator(min(self.BUFFER_SIZE,self.length - self.recived))
+            term = min(self.BUFFER_SIZE,self.length - self.recived)
+            debug("New terminator: " +str(term) + str((self.recived, self.length)))
+            self.set_terminator(term)
             return
         self.header = parseData(data)
         self.formatHeader()
