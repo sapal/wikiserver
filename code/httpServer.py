@@ -3,6 +3,7 @@ from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
 from fileManager import fileManager,FileInfo
 from urllib import quote,unquote
 from SocketServer import ThreadingMixIn
+from mimetypes import guess_type
 from logging import basicConfig, debug, DEBUG
 #basicConfig(filename='httpServer.log', level=DEBUG, filemode='w')
 
@@ -23,7 +24,10 @@ class HttpRequest(BaseHTTPRequestHandler):
             if info.fileType == "not found":
                 raise IOError()
             self.send_response(200)
-            self.send_header('Content-type', 'text/html') #TODO
+            type = guess_type(info.filename)[0]
+            if type is None:
+                type = 'text/html'
+            self.send_header('Content-type', type) #TODO
             self.end_headers()
             f = open(info.filename)
             if info.fileType == "file":
@@ -36,7 +40,7 @@ class HttpRequest(BaseHTTPRequestHandler):
                     chunk = f.read(min(chunkSize, info.currentSize-written))
                     written += len(chunk)
                     self.wfile.write(chunk)
-                    debug(chunk)
+                    #debug(chunk)
             elif info.fileType == "directory":
                 if self.path[-1] == '/':
                     self.path = self.path[:-1]
