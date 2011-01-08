@@ -8,6 +8,7 @@ import os
 import threading
 import datetime
 import time
+from optparse import OptionParser
 
 def done_fun():
     print 'byebye'
@@ -146,6 +147,20 @@ def newThreadPushFile(host, filename, fakeFilename, typ, id):
     pfcThread.deamon = True
     pfcThread.start()
     print 'launched'
-    
-client = HiddenServer('localhost', '/', 'servuś')
-asyncore.loop()
+
+if __name__ == '__main__':
+    parser = OptionParser()
+    parser.add_option('--host', dest='host', help='host to connect to, default is localhost')
+    parser.add_option('-n', '--name', dest='hidden_server_name', help='name of your hidden server, default is servus')
+    (options, args) = parser.parse_args()
+    print options
+    print args
+    host = 'localhost'
+    if(options.host!=None):
+        host = options.host
+    name = 'servuś'
+    if(options.hidden_server_name!=None):
+        name = options.hidden_server_name
+    print 'host: ' + host + ' myname: ' + name    
+    client = HiddenServer(host, '/', name)
+    asyncore.loop()
