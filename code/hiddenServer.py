@@ -73,6 +73,7 @@ class HiddenServer(asyncore.dispatcher):
     def answerToNope(self):
         self.buffer += 'NOPE\nid:' + self.req['id'] + '\n\n'
     def answerToLsMain(self):
+        # TODO
         print 'main ls'
         tmpfile = 'hiddenServerWorkingFile' + str(random.randint(10000, 1000000)) + str(datetime.datetime.now())
         print tmpfile
@@ -92,7 +93,8 @@ class HiddenServer(asyncore.dispatcher):
                 return
         self.buffer += 'OLD\nid:' + self.req['id'] + '\nsize:'
         self.buffer += str(os.path.getsize(filename)) + '\n'
-        self.buffer += 'type:file\n\n'
+        self.buffer += 'type:file\n'
+        self.buffer += 'modifytime:0\n\n' #TODO:zrobić
         print 'new thread?'
         newThreadPushFile(self.host, filename, fakeFilename, typ, self.req['id'])
     def answerToDir(self, filename):
@@ -106,57 +108,43 @@ class HiddenServer(asyncore.dispatcher):
         # TO DO : LOCK !!!
         time.sleep(5)
         os.remove(tmpfile)
-        
-class PushFileConnectionClient(asyncore.dispatcher):
+
+class PushFileConnectionClient(socket.socket):
     def __init__(self, host, filename, fakeFilename, typ, id):
+        socket.socket.__init__(self, socket.AF_INET, socket.SOCK_STREAM)
         print 'hello init'
-        self.buffer = ""
-        asyncore.dispatcher.__init__(self)
-        self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
         self.connect( (host, 9999))
+        self.buffer = ""
         self.filename = filename
         self.fakeFilename = filename
         self.id = id
         self.typ = typ
-        self.sendFile()
-    def handle_connect(self):
-        pass
-    def handle_close(self):
-        self.close()
-    def handle_read(self):
-        self.recv(8192)
-    def writable(self):
-        return (len(self.buffer) > 0)
-    def handle_write(self):
-        sent = self.send(self.buffer)
-        self.buffer = self.buffer[sent:]
+
+    def sendBuffer(self):
+        while len(self.buffer)>0:
+            sent = self.send(self.buffer)
+            self.buffer = self.buffer[sent:]
+            print(sent)
+
     def sendFile(self):
-        print 'sending file'
         self.buffer += 'PUSH\n'
         self.buffer += 'id:'+self.id+'\n'
         self.buffer += 'size:' + str(os.path.getsize(self.filename)) + '\n'
         self.buffer += 'filename:' + self.fakeFilename + '\n'
-        self.buffer += 'type:' + self.typ + '\n\n'
+        self.buffer += 'type:' + self.typ + '\n'
+        self.buffer += 'modifytime:0\n\n' #TODO:zrobić
         f = open(self.filename, "rb")
         data = f.read()
-        f.close()
-        self.buffer += data 
-        self.buffer += '\n'
-class HelperClass:
-    def __init__(self, host, filename, fakeFilename, typ, id):
-        self.host = host
-        self.filename = filename
-        self.typ = typ
-        self.id = id
-        self.fakeFilename = fakeFilename
-    def startAndPushFile(self):
-        PushFileConnectionClient(self.host, self.filename, self.fakeFilename, self.typ, self.id)
+        self.buffer += data
+        self.sendBuffer()
+        print("SENDED")
         
 def newThreadPushFile(host, filename, fakeFilename, typ, id):
-    hc = HelperClass(host, filename, fakeFilename, typ, id)
-    pfc = threading.Thread(target=hc.startAndPushFile)
-    pfc.deamon = True
-    pfc.start()
+    pfc = PushFileConnectionClient(host, filename, fakeFilename, typ, id)
+
+    pfcThread = threading.Thread(target=pfc.sendFile)
+    pfcThread.deamon = True
+    pfcThread.start()
     print 'launched'
     
 client = HiddenServer('localhost', '/', 'servuś')
