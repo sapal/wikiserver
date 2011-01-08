@@ -5,6 +5,8 @@ import os
 import time
 from logging import basicConfig, debug, DEBUG
 basicConfig(filename='log', level=DEBUG, filemode='w')
+#def debug(x):
+#    print(x)
 
 class FileInfo :
     '''Klasa odpowiedzialna za dostarczanie informacji o plikach'''

@@ -28,12 +28,11 @@ class HttpRequest(BaseHTTPRequestHandler):
             f = open(info.filename)
             if info.fileType == "file":
                 written = 0
-                chunkSize = 10
+                chunkSize = 1024
                 while written < info.size:
                     if written == info.currentSize:
-                        info.fileModified.acquire()
-                        info.fileModified.wait()
-                        info.fileModified.release()
+                        with info.fileModified:
+                            info.fileModified.wait()
                     chunk = f.read(min(chunkSize, info.currentSize-written))
                     written += len(chunk)
                     self.wfile.write(chunk)
@@ -42,9 +41,8 @@ class HttpRequest(BaseHTTPRequestHandler):
                 if self.path[-1] == '/':
                     self.path = self.path[:-1]
                 while info.currentSize < info.size:
-                    info.fileModified.acquire()
-                    info.fileModified.wait()
-                    info.fileModified.release()
+                    with info.fileModified:
+                        info.fileModified.wait()
                 self.wfile.write('<html><head><meta http-equiv="content-type" content="text/html; charset=utf-8"/></head><body><ul>\n')
                 for line in f:
                     self.wfile.write('<li><a href="{0}/{2}">{1}</a></li>\n'.format(self.path, line.strip(), quote(line.strip())))
@@ -52,6 +50,7 @@ class HttpRequest(BaseHTTPRequestHandler):
         except IOError:
             self.send_error(404,'Nie znaleziono pliku {0}'.format(self.path))
         finally:
+            self.wfile.flush()
             info.stopUsing()
 
 class HttpServer(ThreadingMixIn, HTTPServer):
