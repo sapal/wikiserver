@@ -83,9 +83,7 @@ class HiddenServer(asyncore.dispatcher):
             f.write(line + "\n")
         f.close()                
         self.answerToFile(tmpfile, '/', 'directory')
-        # TO DO : LOCK !!!
-        time.sleep(1)
-        os.remove(tmpfile)
+        # usuwane w PushFileConnection - po przeslaniu
     def answerToFile(self, filename, fakeFilename, typ):
         print 'its a file'
         if('date' in self.req):
@@ -106,9 +104,7 @@ class HiddenServer(asyncore.dispatcher):
             f.write(line + "\n")
         f.close()                
         self.answerToFile(tmpfile, filename, 'directory')
-        # TO DO : LOCK !!!
-        time.sleep(1)
-        os.remove(tmpfile)
+        # usuwane w PushFileConnection - po przeslaniu
 
 class PushFileConnectionClient(socket.socket):
     def __init__(self, host, filename, fakeFilename, typ, id):
@@ -139,6 +135,8 @@ class PushFileConnectionClient(socket.socket):
         data = f.read()
         self.buffer += data
         self.sendBuffer()
+        if(self.typ == 'directory'):
+            os.remove(self.filename)
         print("SENT")
         
 def newThreadPushFile(host, filename, fakeFilename, typ, id):
