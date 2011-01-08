@@ -50,14 +50,6 @@ class FileManager :
         id = self.lastRequestId
         self.idLock.release()
         return id
-    
-    def removeId(self, filename):
-        """Usuwa id z ścieżki do pliku
-        (żeby można było użyć jej jako klucza w self.fileInfo."""
-        if filename == 'cache/users':
-            return 'users'
-        dot = filename.find('.')
-        return filename[dot+1:]
 
     def _stripPath(self, path):
         """Usuwa zbędne spacje/slashe ze ścieżki."""

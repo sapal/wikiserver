@@ -26,6 +26,8 @@ class HiddenServerConnection(asynchat.async_chat):
         self.writeThread.start()
 
     def writeLoop(self):
+        """Funkcja przekazująca wszystkie zapytania z requestQueue do HiddenServera.
+        Uruchamiana na osobnym wątku."""
         global fileManager
         while True:
             print("WRITE LOOP")
@@ -48,6 +50,7 @@ class HiddenServerConnection(asynchat.async_chat):
         self.data.append(data)
 
     def processResponse(self):
+        """Funkcja przetwarzająca odpowiedź od HiddenServera."""
         print 'processRespone'
         global fileManager
         r = self.response
@@ -132,11 +135,14 @@ Zapisuje dane do odpowiedniego pliku i przy każdym zapisie wywołuje sizeChange
 
 
     def formatHeader(self):
+        """Sformatuj nagłówek (zamień stringi w self.header na odpowiednie
+        typy."""
         for key in ('length','id'):
             self.header[key] = int(self.header[key])
         self.header['filetype'] = self.header['filetype'].strip()
         if PushFileConnection.dbg:
             print self.header
+
     @property
     def length(self):
         return self.header['length']
