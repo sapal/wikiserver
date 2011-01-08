@@ -1,7 +1,7 @@
 # coding=utf-8
 
 from fileManager import fileManager
-import fileManager as fm
+#import fileManager as fm
 import threading
 import asynchat, asyncore
 import socket
@@ -21,6 +21,7 @@ class HiddenServerConnection(asynchat.async_chat):
         self.data = []
         self.response = {}
         self.user = "" 
+        self.stopLock = threading.RLock() # tego locka trzeba zdobyć, żeby zakończyć HiddenServerConnection
         self.writeThread = threading.Thread(target=self.writeLoop)
         self.writeThread.daemon = True
         self.writeThread.start()
@@ -34,13 +35,11 @@ class HiddenServerConnection(asynchat.async_chat):
             request = self.requestQueue.get()
             print("GOT REQUEST")
             filename = fileManager.getFilename(request['filename'], user=self.user, id=request['id'])
-            if filename in fileManager.fileInfo:
-                info = fileManager.fileInfo[filename]
-            else:
-                info = fm.FileInfo()
-            request['modifyTime'] = info.modifyTime
-            print('REQUEST: '+self.user+' '+str(request))
-            self.sendRequests.put((request, info))
+            with self.stopLock:
+                info = fileManager.startUsingFileInfo(filename)
+                request['modifyTime'] = info.modifyTime
+                print('REQUEST: '+self.user+' '+str(request))
+                self.sendRequests.put((request, info))
             self.push("GET\n")
             self.push("filename:{filename}\nmodifyTime:{modifyTime}\nid:{id}\noriginalRequest:{0}\r\n".format(
                 base64.b64encode(request['originalRequest']), **request) )
@@ -67,12 +66,13 @@ class HiddenServerConnection(asynchat.async_chat):
             return
         else:
             print 'else czyli nie mynameis'
-            request, info = self.sendRequests.get()
-            fileManager.processResponse(request['id'], r, info)
-            c = request['answerCondition']
-            c.acquire()
-            c.notify()
-            c.release()
+            with self.stopLock:
+                request, info = self.sendRequests.get()
+                fileManager.processResponse(request['id'], r, info)
+                c = request['answerCondition']
+                with c:
+                    c.notify()
+                info.stopUsing()
         print 'endof'    
 
     def handle_error(self):
@@ -85,8 +85,12 @@ class HiddenServerConnection(asynchat.async_chat):
         self.processResponse()   # dorota 
 
     def handle_close(self):
-        print "Close"
-        self.close()
+        with self.stopLock:
+            print "Close"
+            self.close()
+            while not self.sendRequests.empty():
+                r,info = self.sendRequests.get(False)
+                info.stopUsing()
 
 class HSServer(asyncore.dispatcher):
     '''Klasa odpowiedzialna za tworzenie HiddenServerConnectionów'''
@@ -104,10 +108,10 @@ class HSServer(asyncore.dispatcher):
         if not p:
             return
         conn, addr = p
-        h = HiddenServerConnection(conn)
+        HiddenServerConnection(conn)
         
 def startHSServer():
-    s = HSServer(8888, reuseAddress=True) # Nie jestem pewien, czy w końcowym kodzie powinno być reuseAddress, ale do debugowania się nada
+    HSServer(8888, reuseAddress=True) # Nie jestem pewien, czy w końcowym kodzie powinno być reuseAddress, ale do debugowania się nada
     print("Starting HSServer.")
     asyncore.loop()
 
@@ -191,5 +195,5 @@ class PushFileServer(asyncore.dispatcher):
         
 def startPushFileServer():
     print("Starting PushFileServer")
-    s = PushFileServer(9999, reuseAddress=True) # Nie jestem pewien, czy w końcowym kodzie powinno być reuseAddress, ale do debugowania się nada
+    PushFileServer(9999, reuseAddress=True) # Nie jestem pewien, czy w końcowym kodzie powinno być reuseAddress, ale do debugowania się nada
     asyncore.loop()
