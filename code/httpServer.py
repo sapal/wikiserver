@@ -3,6 +3,8 @@ from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
 from fileManager import fileManager,FileInfo
 from urllib import quote,unquote
 from SocketServer import ThreadingMixIn
+from logging import basicConfig, debug, DEBUG
+basicConfig(filename='httpServer.log', level=DEBUG, filemode='w')
 
 class HttpRequest(BaseHTTPRequestHandler):
     '''Klasa odpowiedzialna za obsługę HTTP'''
@@ -15,7 +17,7 @@ class HttpRequest(BaseHTTPRequestHandler):
                         self.path,
                         self.request_version,
                         str(self.headers)]))
-            print("HTTP:info:{0}".format(info))
+            debug("HTTP:info:{0}".format(info))
             if info.fileType == "not found":
                 raise IOError()
             self.send_response(200)
@@ -33,7 +35,7 @@ class HttpRequest(BaseHTTPRequestHandler):
                     chunk = f.read(min(chunkSize, info.currentSize-written))
                     written += len(chunk)
                     self.wfile.write(chunk)
-                    print(chunk)
+                    debug(chunk)
             elif info.fileType == "directory":
                 if self.path[-1] == '/':
                     self.path = self.path[:-1]

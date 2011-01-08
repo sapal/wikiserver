@@ -8,10 +8,11 @@ import socket
 from Queue import Queue
 from helper import parseData
 import base64
+from logging import basicConfig, debug, DEBUG
+basicConfig(filename='hsConnection.log', level=DEBUG, filemode='w')
 
 class HiddenServerConnection(asynchat.async_chat):
     '''Klasa reprezentująca trwałe połączenie HiddenServera z Serverem'''
-    dbg = True
     responses = ["OK", "OLD", "MYNAMEIS"]
     def __init__(self, sock):
         asynchat.async_chat.__init__(self, sock)
@@ -31,41 +32,39 @@ class HiddenServerConnection(asynchat.async_chat):
         Uruchamiana na osobnym wątku."""
         global fileManager
         while True:
-            print("WRITE LOOP")
             request = self.requestQueue.get()
-            print("GOT REQUEST")
+            debug("GOT REQUEST")
             filename = fileManager.getFilename(request['filename'], user=self.user, id=request['id'])
             with self.stopLock:
                 info = fileManager.startUsingFileInfo(filename)
                 request['modifyTime'] = info.modifyTime
-                print('REQUEST: '+self.user+' '+str(request))
+                debug('REQUEST: '+self.user+' '+str(request))
                 self.sendRequests.put((request, info))
             self.push("GET\n")
             self.push("filename:{filename}\nmodifyTime:{modifyTime}\nid:{id}\noriginalRequest:{0}\r\n".format(
                 base64.b64encode(request['originalRequest']), **request) )
 
     def collect_incoming_data(self, data):
-        #print "INCOMING DATA: "+data
+        #debug("INCOMING DATA: "+data)
         self.data.append(data)
 
     def processResponse(self):
         """Funkcja przetwarzająca odpowiedź od HiddenServera."""
-        print 'processRespone'
+        debug('processRespone')
         global fileManager
         r = self.response
         self.response = {}
-        if HiddenServerConnection.dbg:
-            print(r)
-            print 'to byl debug'
+        debug(str(r))
+        debug('to byl debug')
         if r['response'] == "MYNAMEIS":
-            print 'mynameis'
+            debug('mynameis')
             self.user = r['username'].strip()
             fileManager.hiddenServerConnections[self.user] = self
             self.push('Hello ' + r['username'].strip() + ' i am your master\r\n')
-            print 'Got him!'
+            debug('Got him!')
             return
         else:
-            print 'else czyli nie mynameis'
+            debug('else czyli nie mynameis')
             with self.stopLock:
                 request, info = self.sendRequests.get()
                 fileManager.processResponse(request['id'], r, info)
@@ -73,7 +72,7 @@ class HiddenServerConnection(asynchat.async_chat):
                 with c:
                     c.notify()
                 info.stopUsing()
-        print 'endof'    
+        debug('endof')    
 
     def handle_error(self):
         pass
@@ -86,7 +85,7 @@ class HiddenServerConnection(asynchat.async_chat):
 
     def handle_close(self):
         with self.stopLock:
-            print "Close"
+            debug("Close")
             self.close()
             while not self.sendRequests.empty():
                 r,info = self.sendRequests.get(False)
@@ -118,7 +117,6 @@ def startHSServer():
 class PushFileConnection(asynchat.async_chat):
     '''Klasa reprezentująca połączenie przesyłające plik z HiddenServera do Servera.
 Zapisuje dane do odpowiedniego pliku i przy każdym zapisie wywołuje sizeChanged()'''
-    dbg = True
     def __init__(self, sock):
         asynchat.async_chat.__init__(self, sock)
         self.BUFFER_SIZE = 10
@@ -135,7 +133,7 @@ Zapisuje dane do odpowiedniego pliku i przy każdym zapisie wywołuje sizeChange
 
     def handle_error(self):
         import traceback
-        traceback.print_exc()
+        debug(traceback.format_exc())
 
 
     def formatHeader(self):
@@ -144,8 +142,7 @@ Zapisuje dane do odpowiedniego pliku i przy każdym zapisie wywołuje sizeChange
         for key in ('length','id'):
             self.header[key] = int(self.header[key])
         self.header['filetype'] = self.header['filetype'].strip()
-        if PushFileConnection.dbg:
-            print self.header
+        debug(str(self.header))
 
     @property
     def length(self):
@@ -172,7 +169,7 @@ Zapisuje dane do odpowiedniego pliku i przy każdym zapisie wywołuje sizeChange
         self.reciveData = True
 
     def handle_close(self):
-        if PushFileConnection.dbg:print "PFC:Close"
+        debug("PFC:Close")
         self.close()
         
 class PushFileServer(asyncore.dispatcher):
