@@ -3,6 +3,8 @@
 import threading
 import os
 import time
+from logging import basicConfig, debug, DEBUG
+basicConfig(filename='fileManager.log', level=DEBUG, filemode='w')
 
 class FileInfo :
     '''Klasa odpowiedzialna za dostarczanie informacji o plikach'''
@@ -147,22 +149,22 @@ class FileManager :
         id = self.nextRequestId()
         filename = self.getFilename(path, id=id)
         if filename == "cache/users":
-            print '************************************* ASK FOR USERS' # dorota
+            debug('************************************* ASK FOR USERS') # dorota
             f = open(filename,"w")
             for user in self.hiddenServerConnections.keys():
-                print 'there is' + user                                 # dorota
+                debug('there is' + user)                                 # dorota
                 f.write(user+"\n")
             f.close()
             info.filename = filename
             info.fileType = "directory"
             info.size = info.currentSize = os.path.getsize(info.filename)
-            print '********************************************* END'   # dorota
+            debug('********************************************* END')   # dorota
         else:
             try:
                 self.requestInfo[id] = FileInfo()
                 self.requestInfo[id].path = path
                 self.requestInfo[id].filename = filename
-                print("getFileInfo({0}), sending request".format(filename))
+                debug("getFileInfo({0}), sending request".format(filename))
                 cond = threading.Condition()
                 cond.acquire()
                 user = self.getUser(path)
@@ -173,7 +175,7 @@ class FileManager :
                     'answerCondition':cond})
                 cond.wait()
                 cond.release()
-                print("getFileInfo({0}), request completed".format(filename))
+                debug("getFileInfo({0}), request completed".format(filename))
                 info = self.requestInfo[id]
                 #Wait for PushFileConnection to establish:
                 with info.fileModified:
@@ -181,10 +183,10 @@ class FileManager :
                         info.fileModified.wait()
             except BaseException:
                 import traceback
-                traceback.print_exc()
+                debug(traceback.format_exc())
                 return FileInfo()
-        print("getFileInfo({0}):{1}".format(path,str(info)))
-        print(self.fileInfo)
+        debug("getFileInfo({0}):{1}".format(path,str(info)))
+        debug(self.fileInfo)
         return info
 
     def processResponse (self, requestId, HSresponse, fileInfo) :
