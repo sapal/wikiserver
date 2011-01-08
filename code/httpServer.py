@@ -29,7 +29,7 @@ class HttpRequest(BaseHTTPRequestHandler):
                 type = 'text/html'
             self.send_header('Content-type', type) #TODO
             self.end_headers()
-            f = open(info.filename)
+            f = open(info.filename, 'r')
             if info.fileType == "file":
                 written = 0
                 chunkSize = 1024
