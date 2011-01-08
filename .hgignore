@@ -1,5 +1,6 @@
 syntax: glob
 auto
+code/cache/*
 *.pyc
 *.eps
 .*.swp
