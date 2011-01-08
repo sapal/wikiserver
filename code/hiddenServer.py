@@ -107,11 +107,13 @@ class PushFileConnectionClient(asyncore.dispatcher):
         pass
     def handle_close(self):
         self.close()
-    def handle_read(self):
-        self.recv(8192)
+    #def handle_read(self):
+        #self.recv(8192)
     def writable(self):
+        print("WRITTABLE")
         return (len(self.buffer) > 0)
     def handle_write(self):
+        print("WRITE:"+self.buffer)
         sent = self.send(self.buffer)
         self.buffer = self.buffer[sent:]
     def sendFile(self):
@@ -119,10 +121,11 @@ class PushFileConnectionClient(asyncore.dispatcher):
         self.buffer += 'id:'+self.id+'\n'
         self.buffer += 'size:' + str(os.path.getsize(self.filename)) + '\n'
         self.buffer += 'filename:' + self.filename + '\n'
-        self.buffer += 'type' + self.typ + '\n\n'
+        self.buffer += 'type:' + self.typ + '\n\n'
         f = open(self.filename, "rb")
         data = f.read()
         self.buffer += data
+        print("SENDED:"+self.buffer)
         
 def newThreadPushFile(host, filename, typ, id):
     pfc = threading.Thread(target=startAndPushFile(host, filename, typ, id))

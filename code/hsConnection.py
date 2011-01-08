@@ -118,6 +118,7 @@ class PushFileConnection(asynchat.async_chat):
     '''Klasa reprezentująca połączenie przesyłające plik z HiddenServera do Servera.
 Zapisuje dane do odpowiedniego pliku i przy każdym zapisie wywołuje sizeChanged()'''
     def __init__(self, sock):
+        print("PUSH FILE")
         asynchat.async_chat.__init__(self, sock)
         self.BUFFER_SIZE = 10
         self.set_terminator("\n\n")
@@ -129,26 +130,27 @@ Zapisuje dane do odpowiedniego pliku i przy każdym zapisie wywołuje sizeChange
         self.fileInfo = None
 
     def collect_incoming_data(self, data):
+        print("PushFile.data:"+data)
         self.data.append(data)
 
     def handle_error(self):
         import traceback
         debug(traceback.format_exc())
 
-
     def formatHeader(self):
         """Sformatuj nagłówek (zamień stringi w self.header na odpowiednie
         typy."""
-        for key in ('length','id'):
+        for key in ('size','id'):
             self.header[key] = int(self.header[key])
-        self.header['filetype'] = self.header['filetype'].strip()
+        self.header['type'] = self.header['type'].strip()
         debug(str(self.header))
 
     @property
     def length(self):
-        return self.header['length']
+        return self.header['size']
 
     def found_terminator(self):
+        print("FOUND TERM")
         global fileManager
         data = "".join(self.data)
         self.data = []
@@ -158,13 +160,14 @@ Zapisuje dane do odpowiedniego pliku i przy każdym zapisie wywołuje sizeChange
             self.file.flush()
             self.fileInfo.sizeChanged(self.recived)
             self.set_terminator(min(self.BUFFER_SIZE,self.length - self.recived))
+            print("RECIVE")
             return
         self.header = parseData(data)
         self.formatHeader()
         self.set_terminator(min(self.BUFFER_SIZE,self.length - self.recived))
         self.fileInfo = fileManager.requestInfo[self.header['id']]
-        self.fileInfo.fileType = self.header['filetype']
-        self.fileInfo.size = self.header['length']
+        self.fileInfo.fileType = self.header['type']
+        self.fileInfo.size = self.header['size']
         self.file = open(self.fileInfo.filename, 'w')
         self.reciveData = True
 
