@@ -82,58 +82,56 @@ class HiddenServer(asyncore.dispatcher):
                 return
         self.buffer += 'OLD\nid:' + self.req['id'] + '\nsize:'
         self.buffer += str(os.path.getsize(filename)) + '\n'
-        self.buffer += 'type:file\n\n'
+        self.buffer += 'type:file\n'
+        self.buffer += 'modifytime:0\n\n' #TODO:zrobić
         print 'new thread?'
         newThreadPushFile(self.host, filename, 'file', self.req['id'])
     def answerToDir(self, filename):
         print 'get dir'
         pass
 
-class PushFileConnectionClient(asyncore.dispatcher):
+class PushFileConnectionClient(socket.socket):
     def __init__(self, host, filename, typ, id):
+        socket.socket.__init__(self, socket.AF_INET, socket.SOCK_STREAM)
         print 'hello init'
-        asyncore.dispatcher.__init__(self)
-        self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
         self.connect( (host, 9999))
         self.buffer = ""
         self.filename = filename
         self.id = id
         self.typ = typ
+
+    def sendData(self):
         if(self.typ == 'file'):
             self.sendFile()
         else:
             self.sendDir()    
-    def handle_connect(self):
-        pass
-    def handle_close(self):
-        self.close()
-    #def handle_read(self):
-        #self.recv(8192)
-    def writable(self):
-        print("WRITTABLE")
-        return (len(self.buffer) > 0)
-    def handle_write(self):
-        print("WRITE:"+self.buffer)
-        sent = self.send(self.buffer)
-        self.buffer = self.buffer[sent:]
+
+    def sendBuffer(self):
+        while len(self.buffer)>0:
+            sent = self.send(self.buffer)
+            self.buffer = self.buffer[sent:]
+            print(sent)
+
     def sendFile(self):
         self.buffer += 'PUSH\n'
         self.buffer += 'id:'+self.id+'\n'
         self.buffer += 'size:' + str(os.path.getsize(self.filename)) + '\n'
         self.buffer += 'filename:' + self.filename + '\n'
-        self.buffer += 'type:' + self.typ + '\n\n'
+        self.buffer += 'type:' + self.typ + '\n'
+        self.buffer += 'modifytime:0\n\n' #TODO:zrobić
         f = open(self.filename, "rb")
         data = f.read()
         self.buffer += data
-        print("SENDED:"+self.buffer)
+        self.sendBuffer()
+        print("SENDED")
         
 def newThreadPushFile(host, filename, typ, id):
-    pfc = threading.Thread(target=startAndPushFile(host, filename, typ, id))
-    pfc.deamon = True
-    pfc.start()
+    pfc = PushFileConnectionClient(host, filename, typ, id)
+
+    pfcThread = threading.Thread(target=pfc.sendData)
+    pfcThread.deamon = True
+    pfcThread.start()
     print 'launched'
-def startAndPushFile(host, filename, typ, id):
-    PushFileConnectionClient(host, filename, typ, id)
     
 client = HiddenServer('localhost', '/', 'servuś')
 asyncore.loop()

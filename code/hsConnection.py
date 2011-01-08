@@ -9,7 +9,7 @@ from Queue import Queue
 from helper import parseData
 import base64
 from logging import basicConfig, debug, DEBUG
-basicConfig(filename='hsConnection.log', level=DEBUG, filemode='w')
+#basicConfig(filename='hsConnection.log', level=DEBUG, filemode='w')
 
 class HiddenServerConnection(asynchat.async_chat):
     '''Klasa reprezentująca trwałe połączenie HiddenServera z Serverem'''
@@ -118,7 +118,6 @@ class PushFileConnection(asynchat.async_chat):
     '''Klasa reprezentująca połączenie przesyłające plik z HiddenServera do Servera.
 Zapisuje dane do odpowiedniego pliku i przy każdym zapisie wywołuje sizeChanged()'''
     def __init__(self, sock):
-        print("PUSH FILE")
         asynchat.async_chat.__init__(self, sock)
         self.BUFFER_SIZE = 10
         self.set_terminator("\n\n")
@@ -130,7 +129,7 @@ Zapisuje dane do odpowiedniego pliku i przy każdym zapisie wywołuje sizeChange
         self.fileInfo = None
 
     def collect_incoming_data(self, data):
-        print("PushFile.data:"+data)
+        print("data: "+data)
         self.data.append(data)
 
     def handle_error(self):
@@ -140,9 +139,13 @@ Zapisuje dane do odpowiedniego pliku i przy każdym zapisie wywołuje sizeChange
     def formatHeader(self):
         """Sformatuj nagłówek (zamień stringi w self.header na odpowiednie
         typy."""
-        for key in ('size','id'):
-            self.header[key] = int(self.header[key])
-        self.header['type'] = self.header['type'].strip()
+        try:
+            for key in ('size','id'):
+                self.header[key] = int(self.header[key])
+            self.header['type'] = self.header['type'].strip()
+        except BaseException as e:
+            print(e)
+            print(str(self.header))
         debug(str(self.header))
 
     @property
@@ -150,7 +153,6 @@ Zapisuje dane do odpowiedniego pliku i przy każdym zapisie wywołuje sizeChange
         return self.header['size']
 
     def found_terminator(self):
-        print("FOUND TERM")
         global fileManager
         data = "".join(self.data)
         self.data = []
@@ -159,8 +161,11 @@ Zapisuje dane do odpowiedniego pliku i przy każdym zapisie wywołuje sizeChange
             self.file.write(data)
             self.file.flush()
             self.fileInfo.sizeChanged(self.recived)
+            if self.length == self.recived:
+                print("RECIVED ALL")
+                self.close()
+                return
             self.set_terminator(min(self.BUFFER_SIZE,self.length - self.recived))
-            print("RECIVE")
             return
         self.header = parseData(data)
         self.formatHeader()
