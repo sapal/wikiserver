@@ -65,19 +65,19 @@
   <dia:layer name="Tło" visible="true" active="true">
     <dia:object type="UML - Class" version="0" id="O0">
       <dia:attribute name="obj_pos">
-        <dia:point val="27.3869,-3.41535"/>
+        <dia:point val="26.6369,-3.96535"/>
       </dia:attribute>
       <dia:attribute name="obj_bb">
-        <dia:rectangle val="27.3369,-3.46535;61.4319,15.3346"/>
+        <dia:rectangle val="26.5869,-4.01535;60.6819,16.6346"/>
       </dia:attribute>
       <dia:attribute name="elem_corner">
-        <dia:point val="27.3869,-3.41535"/>
+        <dia:point val="26.6369,-3.96535"/>
       </dia:attribute>
       <dia:attribute name="elem_width">
         <dia:real val="33.994999999999997"/>
       </dia:attribute>
       <dia:attribute name="elem_height">
-        <dia:real val="18.699999999999999"/>
+        <dia:real val="20.549999999999997"/>
       </dia:attribute>
       <dia:attribute name="name">
         <dia:string>#FileManager#</dia:string>
@@ -384,6 +384,36 @@
               </dia:attribute>
             </dia:composite>
           </dia:attribute>
+        </dia:composite>
+        <dia:composite type="umloperation">
+          <dia:attribute name="name">
+            <dia:string>#cleanCache#</dia:string>
+          </dia:attribute>
+          <dia:attribute name="stereotype">
+            <dia:string>##</dia:string>
+          </dia:attribute>
+          <dia:attribute name="type">
+            <dia:string>##</dia:string>
+          </dia:attribute>
+          <dia:attribute name="visibility">
+            <dia:enum val="0"/>
+          </dia:attribute>
+          <dia:attribute name="comment">
+            <dia:string>#Usuwa niepotrzebne pliki z cache.#</dia:string>
+          </dia:attribute>
+          <dia:attribute name="abstract">
+            <dia:boolean val="false"/>
+          </dia:attribute>
+          <dia:attribute name="inheritance_type">
+            <dia:enum val="2"/>
+          </dia:attribute>
+          <dia:attribute name="query">
+            <dia:boolean val="false"/>
+          </dia:attribute>
+          <dia:attribute name="class_scope">
+            <dia:boolean val="false"/>
+          </dia:attribute>
+          <dia:attribute name="parameters"/>
         </dia:composite>
         <dia:composite type="umloperation">
           <dia:attribute name="name">
@@ -810,16 +840,16 @@ Po otrzymaniu odpowiedzi HiddenServerConnection wywoła FileManager.processRespo
         <dia:point val="20.9825,2.5"/>
       </dia:attribute>
       <dia:attribute name="obj_bb">
-        <dia:rectangle val="20.2325,-1.61535;27.4369,3.3"/>
+        <dia:rectangle val="20.2325,-2.16535;26.6869,3.3"/>
       </dia:attribute>
       <dia:attribute name="meta">
         <dia:composite type="dict"/>
       </dia:attribute>
       <dia:attribute name="orth_points">
         <dia:point val="20.9825,2.5"/>
-        <dia:point val="24.1847,2.5"/>
-        <dia:point val="24.1847,-0.81535"/>
-        <dia:point val="27.3869,-0.81535"/>
+        <dia:point val="23.8097,2.5"/>
+        <dia:point val="23.8097,-1.36535"/>
+        <dia:point val="26.6369,-1.36535"/>
       </dia:attribute>
       <dia:attribute name="orth_orient">
         <dia:enum val="0"/>
@@ -992,16 +1022,16 @@ Zapisuje dane do odpowiedniego pliku i przy każdym zapisie wywołuje sizeChange
         <dia:point val="22.2829,27.35"/>
       </dia:attribute>
       <dia:attribute name="obj_bb">
-        <dia:rectangle val="21.5329,0.23465;27.4369,28.15"/>
+        <dia:rectangle val="21.5329,-0.31535;26.6869,28.15"/>
       </dia:attribute>
       <dia:attribute name="meta">
         <dia:composite type="dict"/>
       </dia:attribute>
       <dia:attribute name="orth_points">
         <dia:point val="22.2829,27.35"/>
-        <dia:point val="24.8349,27.35"/>
-        <dia:point val="24.8349,1.03465"/>
-        <dia:point val="27.3869,1.03465"/>
+        <dia:point val="24.4599,27.35"/>
+        <dia:point val="24.4599,0.48465"/>
+        <dia:point val="26.6369,0.48465"/>
       </dia:attribute>
       <dia:attribute name="orth_orient">
         <dia:enum val="0"/>
@@ -1024,19 +1054,19 @@ Zapisuje dane do odpowiedniego pliku i przy każdym zapisie wywołuje sizeChange
     </dia:object>
     <dia:object type="UML - Class" version="0" id="O5">
       <dia:attribute name="obj_pos">
-        <dia:point val="27.3785,15.715"/>
+        <dia:point val="27.8785,17.265"/>
       </dia:attribute>
       <dia:attribute name="obj_bb">
-        <dia:rectangle val="27.3285,15.665;47.1785,34.465"/>
+        <dia:rectangle val="27.8285,17.215;47.6785,41.315"/>
       </dia:attribute>
       <dia:attribute name="elem_corner">
-        <dia:point val="27.3785,15.715"/>
+        <dia:point val="27.8785,17.265"/>
       </dia:attribute>
       <dia:attribute name="elem_width">
         <dia:real val="19.75"/>
       </dia:attribute>
       <dia:attribute name="elem_height">
-        <dia:real val="18.699999999999999"/>
+        <dia:real val="24.000000000000007"/>
       </dia:attribute>
       <dia:attribute name="name">
         <dia:string>#FileInfo#</dia:string>
@@ -1220,6 +1250,29 @@ Zapisuje dane do odpowiedniego pliku i przy każdym zapisie wywołuje sizeChange
         </dia:composite>
         <dia:composite type="umlattribute">
           <dia:attribute name="name">
+            <dia:string>#path#</dia:string>
+          </dia:attribute>
+          <dia:attribute name="type">
+            <dia:string>#string#</dia:string>
+          </dia:attribute>
+          <dia:attribute name="value">
+            <dia:string>##</dia:string>
+          </dia:attribute>
+          <dia:attribute name="comment">
+            <dia:string>#Bezwzględna nazwa pliku#</dia:string>
+          </dia:attribute>
+          <dia:attribute name="visibility">
+            <dia:enum val="0"/>
+          </dia:attribute>
+          <dia:attribute name="abstract">
+            <dia:boolean val="false"/>
+          </dia:attribute>
+          <dia:attribute name="class_scope">
+            <dia:boolean val="false"/>
+          </dia:attribute>
+        </dia:composite>
+        <dia:composite type="umlattribute">
+          <dia:attribute name="name">
             <dia:string>#fileModified#</dia:string>
           </dia:attribute>
           <dia:attribute name="type">
@@ -1253,6 +1306,75 @@ Zapisuje dane do odpowiedniego pliku i przy każdym zapisie wywołuje sizeChange
           </dia:attribute>
           <dia:attribute name="comment">
             <dia:string>#typ pliku#</dia:string>
+          </dia:attribute>
+          <dia:attribute name="visibility">
+            <dia:enum val="0"/>
+          </dia:attribute>
+          <dia:attribute name="abstract">
+            <dia:boolean val="false"/>
+          </dia:attribute>
+          <dia:attribute name="class_scope">
+            <dia:boolean val="false"/>
+          </dia:attribute>
+        </dia:composite>
+        <dia:composite type="umlattribute">
+          <dia:attribute name="name">
+            <dia:string>#usersCount#</dia:string>
+          </dia:attribute>
+          <dia:attribute name="type">
+            <dia:string>#int#</dia:string>
+          </dia:attribute>
+          <dia:attribute name="value">
+            <dia:string>##</dia:string>
+          </dia:attribute>
+          <dia:attribute name="comment">
+            <dia:string>#liczba procesów używających danego pliku #</dia:string>
+          </dia:attribute>
+          <dia:attribute name="visibility">
+            <dia:enum val="0"/>
+          </dia:attribute>
+          <dia:attribute name="abstract">
+            <dia:boolean val="false"/>
+          </dia:attribute>
+          <dia:attribute name="class_scope">
+            <dia:boolean val="false"/>
+          </dia:attribute>
+        </dia:composite>
+        <dia:composite type="umlattribute">
+          <dia:attribute name="name">
+            <dia:string>#lastUse#</dia:string>
+          </dia:attribute>
+          <dia:attribute name="type">
+            <dia:string>#int#</dia:string>
+          </dia:attribute>
+          <dia:attribute name="value">
+            <dia:string>##</dia:string>
+          </dia:attribute>
+          <dia:attribute name="comment">
+            <dia:string>##</dia:string>
+          </dia:attribute>
+          <dia:attribute name="visibility">
+            <dia:enum val="0"/>
+          </dia:attribute>
+          <dia:attribute name="abstract">
+            <dia:boolean val="false"/>
+          </dia:attribute>
+          <dia:attribute name="class_scope">
+            <dia:boolean val="false"/>
+          </dia:attribute>
+        </dia:composite>
+        <dia:composite type="umlattribute">
+          <dia:attribute name="name">
+            <dia:string>#useCount#</dia:string>
+          </dia:attribute>
+          <dia:attribute name="type">
+            <dia:string>#int#</dia:string>
+          </dia:attribute>
+          <dia:attribute name="value">
+            <dia:string>##</dia:string>
+          </dia:attribute>
+          <dia:attribute name="comment">
+            <dia:string>##</dia:string>
           </dia:attribute>
           <dia:attribute name="visibility">
             <dia:enum val="0"/>
@@ -1406,19 +1528,19 @@ Zapisuje dane do odpowiedniego pliku i przy każdym zapisie wywołuje sizeChange
         <dia:boolean val="false"/>
       </dia:attribute>
       <dia:attribute name="obj_pos">
-        <dia:point val="27.3785,16.765"/>
+        <dia:point val="27.8785,18.315"/>
       </dia:attribute>
       <dia:attribute name="obj_bb">
-        <dia:rectangle val="25.7785,4.13465;28.1285,17.565"/>
+        <dia:rectangle val="25.5869,3.58465;28.6285,19.115"/>
       </dia:attribute>
       <dia:attribute name="meta">
         <dia:composite type="dict"/>
       </dia:attribute>
       <dia:attribute name="orth_points">
-        <dia:point val="27.3785,16.765"/>
-        <dia:point val="26.3785,16.765"/>
-        <dia:point val="26.3785,4.93465"/>
-        <dia:point val="27.3869,4.93465"/>
+        <dia:point val="27.8785,18.315"/>
+        <dia:point val="25.6369,18.315"/>
+        <dia:point val="25.6369,4.38465"/>
+        <dia:point val="26.6369,4.38465"/>
       </dia:attribute>
       <dia:attribute name="orth_orient">
         <dia:enum val="0"/>
@@ -1441,13 +1563,13 @@ Zapisuje dane do odpowiedniego pliku i przy każdym zapisie wywołuje sizeChange
     </dia:object>
     <dia:object type="UML - Class" version="0" id="O7">
       <dia:attribute name="obj_pos">
-        <dia:point val="50.0286,16.2502"/>
+        <dia:point val="50.5286,17.8002"/>
       </dia:attribute>
       <dia:attribute name="obj_bb">
-        <dia:rectangle val="49.9786,16.2002;61.4261,19.2002"/>
+        <dia:rectangle val="50.4786,17.7502;61.9261,20.7502"/>
       </dia:attribute>
       <dia:attribute name="elem_corner">
-        <dia:point val="50.0286,16.2502"/>
+        <dia:point val="50.5286,17.8002"/>
       </dia:attribute>
       <dia:attribute name="elem_width">
         <dia:real val="11.3475"/>
@@ -1551,19 +1673,19 @@ Zapisuje dane do odpowiedniego pliku i przy każdym zapisie wywołuje sizeChange
     </dia:object>
     <dia:object type="UML - Dependency" version="1" id="O8">
       <dia:attribute name="obj_pos">
-        <dia:point val="61.4264,17.7002"/>
+        <dia:point val="61.9264,19.2502"/>
       </dia:attribute>
       <dia:attribute name="obj_bb">
-        <dia:rectangle val="60.9319,4.48465;62.5264,17.7502"/>
+        <dia:rectangle val="60.1819,3.93465;63.0264,19.3002"/>
       </dia:attribute>
       <dia:attribute name="meta">
         <dia:composite type="dict"/>
       </dia:attribute>
       <dia:attribute name="orth_points">
-        <dia:point val="61.4264,17.7002"/>
-        <dia:point val="62.4264,17.7002"/>
-        <dia:point val="62.4264,4.93465"/>
-        <dia:point val="61.3819,4.93465"/>
+        <dia:point val="61.9264,19.2502"/>
+        <dia:point val="62.9264,19.2502"/>
+        <dia:point val="62.9264,4.38465"/>
+        <dia:point val="60.6319,4.38465"/>
       </dia:attribute>
       <dia:attribute name="orth_orient">
         <dia:enum val="0"/>
@@ -1595,13 +1717,13 @@ Zapisuje dane do odpowiedniego pliku i przy każdym zapisie wywołuje sizeChange
     </dia:object>
     <dia:object type="UML - Class" version="0" id="O9">
       <dia:attribute name="obj_pos">
-        <dia:point val="48.2541,24.8254"/>
+        <dia:point val="48.7541,26.3754"/>
       </dia:attribute>
       <dia:attribute name="obj_bb">
-        <dia:rectangle val="48.2041,24.7754;63.0666,27.7754"/>
+        <dia:rectangle val="48.7041,26.3254;63.5666,29.3254"/>
       </dia:attribute>
       <dia:attribute name="elem_corner">
-        <dia:point val="48.2541,24.8254"/>
+        <dia:point val="48.7541,26.3754"/>
       </dia:attribute>
       <dia:attribute name="elem_width">
         <dia:real val="14.762499999999999"/>
@@ -1705,19 +1827,19 @@ Zapisuje dane do odpowiedniego pliku i przy każdym zapisie wywołuje sizeChange
     </dia:object>
     <dia:object type="UML - Dependency" version="1" id="O10">
       <dia:attribute name="obj_pos">
-        <dia:point val="55.6354,24.775"/>
+        <dia:point val="56.1354,26.325"/>
       </dia:attribute>
       <dia:attribute name="obj_bb">
-        <dia:rectangle val="55.2523,18.7505;56.1523,24.825"/>
+        <dia:rectangle val="55.7523,20.3006;56.6523,26.375"/>
       </dia:attribute>
       <dia:attribute name="meta">
         <dia:composite type="dict"/>
       </dia:attribute>
       <dia:attribute name="orth_points">
-        <dia:point val="55.6354,24.775"/>
-        <dia:point val="55.6354,21.9878"/>
-        <dia:point val="55.7023,21.9878"/>
-        <dia:point val="55.7023,19.2005"/>
+        <dia:point val="56.1354,26.325"/>
+        <dia:point val="56.1354,23.5378"/>
+        <dia:point val="56.2023,23.5378"/>
+        <dia:point val="56.2023,20.7506"/>
       </dia:attribute>
       <dia:attribute name="orth_orient">
         <dia:enum val="1"/>
