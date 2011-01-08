@@ -17,6 +17,7 @@ class HiddenServerConnection(asynchat.async_chat):
     '''Klasa reprezentująca trwałe połączenie HiddenServera z Serverem'''
     responses = ["OK", "OLD", "MYNAMEIS"]
     def __init__(self, sock, map=None):
+        self.buffer = ""
         asynchat.async_chat.__init__(self, sock, map=map)
         self.requestQueue = Queue()
         self.sentRequests = Queue()
@@ -35,16 +36,19 @@ class HiddenServerConnection(asynchat.async_chat):
         global fileManager
         while True:
             request = self.requestQueue.get()
-            debug("GOT REQUEST")
+            debug("GOT REQUEST:"+request['filename'])
             path = self.user + request['filename']
             with self.stopLock:
                 info = fileManager.startUsingFileInfo(path)
                 request['modifyTime'] = info.modifyTime
                 debug('REQUEST: '+self.user+' '+str(request))
                 self.sentRequests.put((request, info))
-            self.push("GET\n")
-            self.push("filename:{filename}\nmodifyTime:{modifyTime}\nid:{id}\noriginalRequest:{0}\n\n".format(
-                base64.b64encode(request['originalRequest']), **request) )
+            self.buffer += "GET\nfilename:{filename}\nmodifyTime:{modifyTime}\nid:{id}\noriginalRequest:{0}\n\n".format(
+                base64.b64encode(request['originalRequest']), **request) 
+            while len(self.buffer)>0:
+                sent = self.send(self.buffer)
+                self.buffer = self.buffer[sent:]
+            debug("REQUEST SENT")
 
     def collect_incoming_data(self, data):
         #debug("INCOMING DATA: "+data)
@@ -77,7 +81,8 @@ class HiddenServerConnection(asynchat.async_chat):
         debug('endof')    
 
     def handle_error(self):
-        debug("PFC:ERROR")
+        debug("HSC:ERROR")
+        #self.handle_close()
 
     def found_terminator(self):
         data = "".join(self.data)
@@ -197,7 +202,7 @@ Zapisuje dane do odpowiedniego pliku i przy każdym zapisie wywołuje sizeChange
 class PushFileServer(asyncore.dispatcher):
     '''Klasa odpowiedzialna za tworzenie PushFileConnectionów'''
 
-    def __init__(self, port, reuseAddress=False, map=None):
+    def __init__(self, port, reuseAddress=True, map=None):
         asyncore.dispatcher.__init__(self, map=map)
         self.map = map
         self.create_socket(socket.AF_INET, socket.SOCK_STREAM)

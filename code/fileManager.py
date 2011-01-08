@@ -84,12 +84,12 @@ class FileManager :
                     try:
                         del self.requestInfo[id]
                         if f.path in self.fileInfo:
-                            del self.fileInfo[f]
+                            del self.fileInfo[f.path]
                         totalSize -= f.size
                         if totalSize <= cacheMax:
                             break
                     except BaseException as e:
-                        print(e)
+                        print("ERROR(CACHE):"+str(e))
 
     def startUsingFileInfo(self, filename):
         """Zwraca fileInfo pliku filename (ścieżka bezwzględna)

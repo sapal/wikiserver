@@ -3,6 +3,7 @@
 
 import random   
 import asyncore, socket	
+import asynchat
 from helper import parseData
 import os
 import threading
@@ -13,10 +14,10 @@ from optparse import OptionParser
 def done_fun():
     print 'byebye'
 
-class HiddenServer(asyncore.dispatcher):
+class HiddenServer(asynchat.async_chat):
     def __init__(self, host, path, myname):
         self.buffer = ""
-        asyncore.dispatcher.__init__(self)
+        asynchat.async_chat.__init__(self)
         self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
         self.host = host
         self.path = path
@@ -26,29 +27,25 @@ class HiddenServer(asyncore.dispatcher):
         self.buffer = 'MYNAMEIS\nusername:' + self.myname + '\n\n'
         # print 'MYNAMEIS:' + self.myname + '\r\n'
         self.data = []
+        self.set_terminator('\n\n')
+    def collect_incoming_data(self, data):
+        self.data.append(data)
     def handle_connect(self):
         pass
     def handle_close(self):
         done_fun()
         self.close()
-    def handle_read(self):
-        got = self.recv(8192)
-        self.data.append(got)
-        print(self.data)
-        if (got.find('\n\n') != -1 or (len(self.data) > 0 and self.data[-1][-1] == '\n' and got[0] == '\n')):
-            self.processRequest()
     def writable(self):
         return (len(self.buffer) > 0)
     def handle_write(self):
         sent = self.send(self.buffer)
         print("HS: sent:"+str(self.buffer[:sent]))
         self.buffer = self.buffer[sent:]
+    def found_terminator(self):
+        self.processRequest()
     def processRequest(self):
         request = "".join(self.data)
         self.data = []
-        terminator = request.find('\n\n')
-        self.data.append(request[terminator+2:])
-        request = request[:terminator]
         self.req = parseData(request)
         print self.req
         if(self.req['response'] == 'GET'):

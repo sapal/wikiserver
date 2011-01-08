@@ -54,8 +54,11 @@ class HttpRequest(BaseHTTPRequestHandler):
                 self.wfile.write("</body></html>\n")
         except IOError:
             self.send_error(404,'Nie znaleziono pliku {0}'.format(self.path))
+        except BaseException as e:
+            print(e)
         finally:
             self.wfile.flush()
+            self.wfile.close()
             info.stopUsing()
 
 class HttpServer(ThreadingMixIn, HTTPServer):
