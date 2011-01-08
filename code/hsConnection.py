@@ -10,6 +10,8 @@ from helper import parseData
 import base64
 from logging import basicConfig, debug, DEBUG
 #basicConfig(filename='hsConnection.log', level=DEBUG, filemode='w')
+#def debug(x):
+#    print(x)
 
 class HiddenServerConnection(asynchat.async_chat):
     '''Klasa reprezentująca trwałe połączenie HiddenServera z Serverem'''
@@ -90,6 +92,9 @@ class HiddenServerConnection(asynchat.async_chat):
             while not self.sendRequests.empty():
                 r,info = self.sendRequests.get(False)
                 info.stopUsing()
+            if self.user != "":
+                del fileManager.hiddenServerConnections[self.user]
+
 
 class HSServer(asyncore.dispatcher):
     '''Klasa odpowiedzialna za tworzenie HiddenServerConnectionów'''
@@ -119,7 +124,7 @@ class PushFileConnection(asynchat.async_chat):
 Zapisuje dane do odpowiedniego pliku i przy każdym zapisie wywołuje sizeChanged()'''
     def __init__(self, sock):
         asynchat.async_chat.__init__(self, sock)
-        self.BUFFER_SIZE = 10
+        self.BUFFER_SIZE = 1024
         self.set_terminator("\n\n")
         self.data = []
         self.header = {}
@@ -129,7 +134,6 @@ Zapisuje dane do odpowiedniego pliku i przy każdym zapisie wywołuje sizeChange
         self.fileInfo = None
 
     def collect_incoming_data(self, data):
-        print("data: "+data)
         self.data.append(data)
 
     def handle_error(self):
@@ -162,19 +166,21 @@ Zapisuje dane do odpowiedniego pliku i przy każdym zapisie wywołuje sizeChange
             self.file.flush()
             self.fileInfo.sizeChanged(self.recived)
             if self.length == self.recived:
-                print("RECIVED ALL")
                 self.close()
                 return
             self.set_terminator(min(self.BUFFER_SIZE,self.length - self.recived))
             return
         self.header = parseData(data)
         self.formatHeader()
-        self.set_terminator(min(self.BUFFER_SIZE,self.length - self.recived))
         self.fileInfo = fileManager.requestInfo[self.header['id']]
         self.fileInfo.fileType = self.header['type']
         self.fileInfo.size = self.header['size']
         self.file = open(self.fileInfo.filename, 'w')
         self.reciveData = True
+        if self.length != 0:
+            self.set_terminator(min(self.BUFFER_SIZE,self.length - self.recived))
+        else:
+            self.fileInfo.sizeChanged(0)
 
     def handle_close(self):
         debug("PFC:Close")

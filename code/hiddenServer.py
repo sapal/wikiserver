@@ -83,7 +83,7 @@ class HiddenServer(asyncore.dispatcher):
         f.close()                
         self.answerToFile(tmpfile, '/', 'directory')
         # TO DO : LOCK !!!
-        time.sleep(5)
+        time.sleep(1)
         os.remove(tmpfile)
     def answerToFile(self, filename, fakeFilename, typ):
         print 'its a file'
@@ -106,7 +106,7 @@ class HiddenServer(asyncore.dispatcher):
         f.close()                
         self.answerToFile(tmpfile, filename, 'directory')
         # TO DO : LOCK !!!
-        time.sleep(5)
+        time.sleep(1)
         os.remove(tmpfile)
 
 class PushFileConnectionClient(socket.socket):
