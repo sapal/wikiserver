@@ -4,10 +4,12 @@ from fileManager import fileManager,FileInfo
 from urllib import quote,unquote
 from SocketServer import ThreadingMixIn
 from logging import basicConfig, debug, DEBUG
-basicConfig(filename='httpServer.log', level=DEBUG, filemode='w')
+#basicConfig(filename='httpServer.log', level=DEBUG, filemode='w')
 
 class HttpRequest(BaseHTTPRequestHandler):
     '''Klasa odpowiedzialna za obsługę HTTP'''
+    def handle_error(self):
+        print("HTTP:ERROR")
     def do_GET(self):
         """Obsługa GET"""
         info = FileInfo()

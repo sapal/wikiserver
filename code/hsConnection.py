@@ -9,7 +9,7 @@ from Queue import Queue
 from helper import parseData
 import base64
 from logging import basicConfig, debug, DEBUG
-basicConfig(filename='hsConnection.log', level=DEBUG, filemode='w')
+#basicConfig(filename='hsConnection.log', level=DEBUG, filemode='w')
 
 class HiddenServerConnection(asynchat.async_chat):
     '''Klasa reprezentująca trwałe połączenie HiddenServera z Serverem'''
@@ -129,25 +129,28 @@ Zapisuje dane do odpowiedniego pliku i przy każdym zapisie wywołuje sizeChange
         self.fileInfo = None
 
     def collect_incoming_data(self, data):
-        debug('incoming data + | + ' + data)
+        print("data: "+data)
         self.data.append(data)
 
     def handle_error(self):
         import traceback
         debug(traceback.format_exc())
 
-
     def formatHeader(self):
         """Sformatuj nagłówek (zamień stringi w self.header na odpowiednie
         typy."""
-        for key in ('length','id'):
-            self.header[key] = int(self.header[key])
-        self.header['filetype'] = self.header['filetype'].strip()
+        try:
+            for key in ('size','id'):
+                self.header[key] = int(self.header[key])
+            self.header['type'] = self.header['type'].strip()
+        except BaseException as e:
+            print(e)
+            print(str(self.header))
         debug(str(self.header))
 
     @property
     def length(self):
-        return self.header['length']
+        return self.header['size']
 
     def found_terminator(self):
         global fileManager
@@ -158,14 +161,18 @@ Zapisuje dane do odpowiedniego pliku i przy każdym zapisie wywołuje sizeChange
             self.file.write(data)
             self.file.flush()
             self.fileInfo.sizeChanged(self.recived)
+            if self.length == self.recived:
+                print("RECIVED ALL")
+                self.close()
+                return
             self.set_terminator(min(self.BUFFER_SIZE,self.length - self.recived))
             return
         self.header = parseData(data)
         self.formatHeader()
         self.set_terminator(min(self.BUFFER_SIZE,self.length - self.recived))
         self.fileInfo = fileManager.requestInfo[self.header['id']]
-        self.fileInfo.fileType = self.header['filetype']
-        self.fileInfo.size = self.header['length']
+        self.fileInfo.fileType = self.header['type']
+        self.fileInfo.size = self.header['size']
         self.file = open(self.fileInfo.filename, 'w')
         self.reciveData = True
 
@@ -190,7 +197,6 @@ class PushFileServer(asyncore.dispatcher):
             return
         conn, addr = p
         PushFileConnection(conn)
-        debug('got new connection')
         
 def startPushFileServer():
     print("Starting PushFileServer")

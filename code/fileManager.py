@@ -4,7 +4,7 @@ import threading
 import os
 import time
 from logging import basicConfig, debug, DEBUG
-basicConfig(filename='fileManager.log', level=DEBUG, filemode='w')
+basicConfig(filename='log', level=DEBUG, filemode='w')
 
 class FileInfo :
     '''Klasa odpowiedzialna za dostarczanie informacji o plikach'''
@@ -166,15 +166,15 @@ class FileManager :
                 self.requestInfo[id].filename = filename
                 debug("getFileInfo({0}), sending request".format(filename))
                 cond = threading.Condition()
-                cond.acquire()
-                user = self.getUser(path)
-                self.hiddenServerConnections[user].requestQueue.put({
-                    'filename':self.getRelativePath(path),
-                    'id':id,
-                    'originalRequest':originalRequest,
-                    'answerCondition':cond})
-                cond.wait()
-                cond.release()
+                with cond:
+                    user = self.getUser(path)
+                    self.hiddenServerConnections[user].requestQueue.put({
+                        'filename':self.getRelativePath(path),
+                        'id':id,
+                        'originalRequest':originalRequest,
+                        'answerCondition':cond})
+                    debug("getFileInfo({0}) waiting".format(filename))
+                    cond.wait()
                 debug("getFileInfo({0}), request completed".format(filename))
                 info = self.requestInfo[id]
                 #Wait for PushFileConnection to establish:
