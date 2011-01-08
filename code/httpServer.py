@@ -1,6 +1,6 @@
 # coding=utf-8
 from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
-from fileManager import fileManager
+from fileManager import fileManager,FileInfo
 from urllib import quote,unquote
 from SocketServer import ThreadingMixIn
 
@@ -8,6 +8,7 @@ class HttpRequest(BaseHTTPRequestHandler):
     '''Klasa odpowiedzialna za obsługę HTTP'''
     def do_GET(self):
         """Obsługa GET"""
+        info = FileInfo()
         try:
             info = fileManager.getFileInfo(unquote(self.path), 
                     ' '.join([self.command,
@@ -46,6 +47,8 @@ class HttpRequest(BaseHTTPRequestHandler):
                 self.wfile.write("</body></html>\n")
         except IOError:
             self.send_error(404,'Nie znaleziono pliku {0}'.format(self.path))
+        finally:
+            info.stopUsing()
 
 class HttpServer(ThreadingMixIn, HTTPServer):
     '''Klasa odpowiedzialna za tworzenie HttpRequestów'''

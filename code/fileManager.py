@@ -2,6 +2,7 @@
 
 import threading
 import os
+import time
 
 class FileInfo :
     '''Klasa odpowiedzialna za dostarczanie informacji o plikach'''
@@ -13,18 +14,20 @@ class FileInfo :
         self.filename = ""
         self.fileModified = threading.Condition()
         self.fileType = "not found"
+        self.usingLock = threading.RLock() # żeby zdobyć ten lock trzeba już mieć fileManager.requestInfoLock
+        self.usersCount = 0 # liczba użytkowników pliku
+        self.lastUse = 0
+        self.useCount = 0
 
     def setModifyTime(self, newTime):
         """Zmienia czas modyfikacji FileInfo uaktualniając
         fileManager.fileInfo."""
         global fileManager
         self.modifyTime = newTime
-        #with fileManager.fileInfoLock:
-        fileManager.fileInfoLock.acquire()
-        if (self.path not in fileManager.fileInfo 
-                or self.modifyTime > fileManager.fileInfo[path].modifyTime):
-            fileManager.fileInfo[path] = self
-        fileManager.fileInfoLock.release()
+        with fileManager.requestInfoLock:
+            if (self.path not in fileManager.fileInfo 
+                    or self.modifyTime > fileManager.fileInfo[self.path].modifyTime):
+                fileManager.fileInfo[self.path] = self
 
     def sizeChanged (self, newSize) :
         """ Zmienia currentSize i robi fileModified.notifyAll() """
@@ -33,6 +36,24 @@ class FileInfo :
         self.fileModified.notifyAll()
         self.fileModified.release()
 
+    def startUsing(self):
+        """Zaczynam pracę z tym FileInfo,
+        proszę go nie usuwać."""
+        global fileManager
+        with fileManager.requestInfoLock:
+            with self.usingLock:
+                self.usersCount += 1
+                self.lastUse = time.time()
+                self.useCount += 1
+
+    def stopUsing(self):
+        """Skończyłem pracę z tym FileInfo,
+        już mi nie jest potrzebne."""
+        global fileManager
+        with fileManager.requestInfoLock:
+            with self.usingLock:
+                self.usersCount -= 1
+
 class FileManager :
     '''Klasa zapewniająca dostęp do plików (singleton)'''
     def __init__(self) :
@@ -40,16 +61,44 @@ class FileManager :
         self.requestInfo = {} # słownik: idZapytania(int) -> FileInfo
         self.fileInfo = {} # słownik: ścieżka do pliku (string) -> FileInfo o najpóźniejszym czasie modyfikacji
         self.lastRequestId = 0
-        self.fileInfoLock = threading.Lock()
-        self.idLock = threading.Lock()
+        self.requestInfoLock = threading.RLock() # lock blokujący dostęp do requestInfo i fileInfo
+        self.idLock = threading.RLock()
+    
+    def cleanCache(self):
+        """Usuwa niepotrzebne pliki z cache."""
+        #TODO:przetestować
+        with self.requestInfoLock:
+            fileInfos = set((id,f) for (id,f) in self.requestInfo.items())
+            totalSize = sum(f.size for (id,f) in fileInfos)
+            cacheMax = 10*1024 #MAX CACHE SIZE
+            if totalSize > cacheMax:
+                toRemove = sorted([(id,f) for (id,f) in fileInfos if f.usersCount == 0], 
+                        key=lambda (id,f):(f.modifyTime - f.lastUse - f.useCount*120))
+                for id,f in toRemove:
+                    del self.requestInfo[id]
+                    if f in self.fileInfo[f.path]:
+                        del self.fileInfo[f]
+                    totalSize -= f.size
+                    if totalSize <= cacheMax:
+                        break
+
+    def startUsingFileInfo(self, filename):
+        """Zwraca fileInfo pliku filename (ścieżka bezwzględna)
+        o najpóźniejszym czasie modyfikacji i zaczyna go używać.
+        Gdy taki nie istnieje, zwraca nowe FileInfo."""
+        with self.requestInfoLock:
+            if filename in self.fileInfo:
+                info = self.fileInfo[filename]
+            else:
+                info = FileInfo()
+            info.startUsing()
+            return info
 
     def nextRequestId(self):
         """Zwraca następne id dla zapytania."""
-        self.idLock.acquire()
-        self.lastRequestId += 1
-        id = self.lastRequestId
-        self.idLock.release()
-        return id
+        with self.idLock:
+            self.lastRequestId += 1
+            return self.lastRequestId
 
     def _stripPath(self, path):
         """Usuwa zbędne spacje/slashe ze ścieżki."""
@@ -127,11 +176,10 @@ class FileManager :
                 print("getFileInfo({0}), request completed".format(filename))
                 info = self.requestInfo[id]
                 #Wait for PushFileConnection to establish:
-                info.fileModified.acquire()
-                if info.size == -1:
-                    info.fileModified.wait()
-                info.fileModified.release()
-            except BaseException as e:
+                with info.fileModified:
+                    if info.size == -1:
+                        info.fileModified.wait()
+            except BaseException:
                 import traceback
                 traceback.print_exc()
                 return FileInfo()
@@ -141,9 +189,12 @@ class FileManager :
 
     def processResponse (self, requestId, HSresponse, fileInfo) :
         """ Przetwarza odpowiedź od HiddenServera i uaktualnia odpowiednie struktury """
-        if HSresponse['response'] == 'OK':
-            self.requestInfo[requestId] = fileInfo
-        elif HSresponse['response'] == 'OLD':
-            self.requestInfo[requestId].setModifyTime(int(HSresponse['modifytime']))
+        with self.requestInfoLock:
+            if HSresponse['response'] == 'OK':
+                self.requestInfo[requestId] = fileInfo
+            elif HSresponse['response'] == 'OLD':
+                self.requestInfo[requestId].setModifyTime(int(HSresponse['modifytime']))
+            self.cleanCache()
+            self.requestInfo[requestId].startUsing()
 
 fileManager = FileManager()
