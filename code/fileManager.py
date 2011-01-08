@@ -17,7 +17,7 @@ class FileInfo :
         self.fileModified = threading.Condition()
         self.fileType = "not found"
         self.usingLock = threading.RLock() # żeby zdobyć ten lock trzeba już mieć fileManager.requestInfoLock
-        self.usersCount = 0 # liczba użytkowników pliku
+        self.usersCount = 0 # liczba procesów używających danego pliku 
         self.lastUse = 0
         self.useCount = 0
 

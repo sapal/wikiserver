@@ -44,74 +44,87 @@
 \section{Działanie Servera}
 \begin{figure}
 \includegraphics[width=\linewidth]{DiagramKlas}
-\caption{Diagram klas Servera}
+\caption{Diagram klas Servera (nie uwzględniono rzeczy związanych 
+z~synchronizacją wątków)}
 \end{figure}
 \subsection{Start Servera}
-Przy starcie \verb!Server!a uruchamiają się trzy wątki: 
+Przy starcie \texttt{Server}a uruchamiają się trzy wątki: 
 \begin{itemize}
-\item \verb!HSServer!
-\item \verb!HttpServer!
-\item \verb!PushFileServer!
+\item \texttt{HSServer}
+\item \texttt{HttpServer}
+\item \texttt{PushFileServer}
 \end{itemize}
 Tworzona jest także klasa FileManager.
 
 \subsection{Obsługa połączenia z~HiddenServerem}
-Każde połączenie z~\verb!HiddenServer!em jest obsługiwane przez 
-dwa wątki w klasie \verb!HiddenServerConnection!. Jeden z~nich służy 
+Każde połączenie z~\texttt{HiddenServer}em jest obsługiwane przez 
+dwa wątki w klasie \texttt{HiddenServerConnection}. Jeden z~nich służy 
 do~wysyłania zapytań, drugi do przetwarzania odpowiedzi.
-Jak tylko \verb!HiddenServer! prześle \verb!MYNAMEIS!,
-połączenie jest rejestrowane w~\verb!FileManager.hiddenServerConnections!.
+Jak tylko \texttt{HiddenServer} prześle \texttt{MYNAMEIS},
+połączenie jest rejestrowane w~\texttt{FileManager.hiddenServerConnections}.
 
 \subsection{Obsługa połączenia HTTP}
 Każde połączenie z~użytkownikiem jest obsługiwane przez osobny wątek: 
-\verb!HttpConnection!. Przetwarza on~zapytanie HTTP na~żądanie konkretnego
-pliku i~wywołuje \verb!FileManager.getFileInfo!. W~zależności od~typu zwróconego
-pliku (\verb!FileInfo.fileType!) zwraca on~użytkownikowi błąd 
-(\verb!"not found"!), listing katalogu (\verb!"directory"!) lub plik.
+\texttt{HttpConnection}. Przetwarza on~zapytanie HTTP na~żądanie konkretnego
+pliku i~wywołuje \texttt{FileManager.getFileInfo}. W~zależności od~typu 
+zwróconego pliku (\texttt{FileInfo.fileType}) zwraca on~użytkownikowi błąd 
+(\texttt{"not found"}), listing katalogu (\texttt{"directory"}) lub plik.
 Odczytywanie pliku/listingu katalogu jest takie samo:
-otwiera się plik \verb!FileInfo.filename!, czyta się tyle bajtów, ile jest
-dostępnych (\verb!FileInfo.currentSize!), wysyła użytkownikowi a~następnie czeka
-na~\verb!FileInfo.fileModified! aż~więcej bajtów będzie dostępnych. Jak cały 
-plik zostanie wysłany, kończy się proces.
+otwiera się plik \texttt{FileInfo.filename}, czyta się tyle bajtów, ile jest
+dostępnych (\texttt{FileInfo.currentSize}), wysyła użytkownikowi a~następnie 
+czeka na~\texttt{FileInfo.fileModified} aż~więcej bajtów będzie dostępnych. 
+Jak cały plik zostanie wysłany, kończy się proces.
 
 \subsection{Zdobywanie pliku przez FileManagera}
-Gdy wywoływana jest metoda \verb!FileManager.getFileInfo! 
+Gdy wywoływana jest metoda \texttt{FileManager.getFileInfo} 
 wykonywane są następujące czynności:
 \begin{itemize}
-\item Zapytaniu nadawane jest kolejne \verb!id!
-\item Do odpowiedniego \verb!HiddenServerConnection! wysyłane jest zapytanie 
+\item Zapytaniu nadawane jest kolejne \texttt{id}
+\item Do odpowiedniego \texttt{HiddenServerConnection} wysyłane jest zapytanie 
 o plik
-\item Wątek czeka na odpowiednim \verb!threading.Condition! na odpowiedź
-\item Po uzyskaniu odpowiedzi zwraca odpowiednie \verb!FileInfo!
+\item Wątek czeka na odpowiednim \texttt{threading.Condition} na odpowiedź
+\item Po uzyskaniu odpowiedzi zwraca odpowiednie \texttt{FileInfo}
 \end{itemize}
 
 \subsection{Obsługa zapytania przez HiddenServerConnection}
-Zapytania do~\verb!HiddenServera! są~kolejkowane i~wysyłane
-asynchronicznie z~przetwarzaniem odpowiedzi. \verb!HiddenServerConnection!
+Zapytania do~\texttt{HiddenServera} są~kolejkowane i~wysyłane
+asynchronicznie z~przetwarzaniem odpowiedzi. 
+\texttt{Hid\-den\-Server\-Connection}
 trzyma kolejkę wysłanych zapytań. Kiedy przyjdzie odpowiedź wywołuje 
-\verb!FileManager.processResponse! oraz \verb!answerCondition.notify!.
+\texttt{File\-Manager\-.process\-Response} oraz \texttt{answerCondition.notify}.
 
 \subsection{Obsługa odpowiedzi przez FileManagera}
-Gdy wywoływane jest metoda \verb!FileManager.processResponse!
+Gdy wywoływane jest metoda \texttt{FileManager.processResponse}
 wykonywane są następujące czynności:
 \begin{itemize}
-\item W~przypadku odpowiedzi \verb!DIRECTORY! lub \verb!OLD! tworzone jest nowe
-\verb!FileInfo!
-\item Odpowiednie \verb!FileInfo! jest mapowane do~odpowiedniego 
-\verb!id!.
+\item W~przypadku odpowiedzi \texttt{DIRECTORY} lub \texttt{OLD} tworzone jest 
+nowe \texttt{FileInfo}
+\item Odpowiednie \texttt{FileInfo} jest mapowane do~odpowiedniego 
+\texttt{id}.
 \end{itemize}
 
 \subsection{Przesyłanie plików z~HiddenServera}
-Każde połączenie przychodzące z~\verb!HiddenServer!a jest obsługiwane przez
-osobny wątek: \verb!PushFileConnection!. Zapisuje on otrzymane dane do~pliku
-wskazywanego przez \verb!FileManager.fileInfo!.
+Każde połączenie przychodzące z~\texttt{HiddenServer}a jest obsługiwane przez
+osobny wątek: \texttt{PushFileConnection}. Zapisuje on otrzymane dane do~pliku
+wskazywanego przez \texttt{FileManager.fileInfo}.
+
+\subsection{Zarządzanie cachem}
+Zarządzanie cachem odbywa się za pomocą metody \texttt{FileManager.cleanCache},
+która jest wywoływana przy każdym \texttt{FileManager.processResponse}.
+Każdy obiekt \texttt{FileInfo} trzyma liczbę aktualnie używających go~procesów,
+usunięcie go z~cache'u może nastąpić tylko, gdy żaden proces go~nie używa.
+
+Pliki są~wybierane do~usunięcia biorąc pod uwagę następujące wielkości:
+\begin{itemize}
+\item Data ostatniego dostępu do pliku
+\item Data modyfikacji pliku
+\item Liczba dostępów do pliku
+\end{itemize}
 
 \subsection{TODO}
 Dla uproszczenia, następujące rzeczy nie zostały tu uwzględnione:
 \begin{itemize}
-\item Zarządzanie cachem (kasowanie starych plików)
-\item Mechanizm blokowania plików w cache (nie można usunąć pliku w~cache 
-jeśli jakiś proces jeszcze go~potrzebuje)
+\item Metody synchronizacji wątków
 \item Watchdogi (procesy obsługujące połączenia powinny być przerywane
 w~przypadku braku odpowiedzi przez dłuższy czas)
 \end{itemize}
