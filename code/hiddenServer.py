@@ -123,14 +123,21 @@ class PushFileConnectionClient(asyncore.dispatcher):
         f = open(self.filename, "rb")
         data = f.read()
         self.buffer += data
+class HelperClass:
+    def __init__(self, host, filename, typ, id):
+        self.host = host
+        self.filename = filename
+        self.typ = typ
+        self.id = id
+    def startAndPushFile(self):
+        PushFileConnectionClient(self.host, self.filename, self.typ, self.id)
         
 def newThreadPushFile(host, filename, typ, id):
-    pfc = threading.Thread(target=startAndPushFile(host, filename, typ, id))
+    hc = HelperClass(host, filename, typ, id)
+    pfc = threading.Thread(target=hc.startAndPushFile)
     pfc.deamon = True
     pfc.start()
     print 'launched'
-def startAndPushFile(host, filename, typ, id):
-    PushFileConnectionClient(host, filename, typ, id)
     
 client = HiddenServer('localhost', '/', 'servuś')
 asyncore.loop()
