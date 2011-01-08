@@ -64,7 +64,7 @@ class HiddenServer(asyncore.dispatcher):
             return
         print 'Ok path'
         if(os.path.isfile(filename)):
-            self.answerToFile(filename, filename)
+            self.answerToFile(filename, filename, 'file')
             return
         if(os.path.isdir(filename)):
             self.answerToDir(filename)
@@ -80,11 +80,11 @@ class HiddenServer(asyncore.dispatcher):
         for line in os.listdir("."):
             f.write(line + "\n")
         f.close()                
-        self.answerToFile(tmpfile, '/')
+        self.answerToFile(tmpfile, '/', 'directory')
         # TO DO : LOCK !!!
         time.sleep(5)
         os.remove(tmpfile)
-    def answerToFile(self, filename, fakeFilename):
+    def answerToFile(self, filename, fakeFilename, typ):
         print 'its a file'
         if('date' in self.req):
             if(self.req['data'] + 100 < str(os.path.getmtime(filename))):
@@ -94,7 +94,7 @@ class HiddenServer(asyncore.dispatcher):
         self.buffer += str(os.path.getsize(filename)) + '\n'
         self.buffer += 'type:file\n\n'
         print 'new thread?'
-        newThreadPushFile(self.host, filename, fakeFilename, 'file', self.req['id'])
+        newThreadPushFile(self.host, filename, fakeFilename, typ, self.req['id'])
     def answerToDir(self, filename):
         print 'get dir'
         tmpfile = 'hiddenServerWorkingFile' + str(random.randint(10000, 1000000)) + str(datetime.datetime.now())
@@ -102,7 +102,7 @@ class HiddenServer(asyncore.dispatcher):
         for line in os.listdir(filename):
             f.write(line + "\n")
         f.close()                
-        self.answerToFile(tmpfile, filename)
+        self.answerToFile(tmpfile, filename, 'directory')
         # TO DO : LOCK !!!
         time.sleep(5)
         os.remove(tmpfile)
@@ -118,10 +118,7 @@ class PushFileConnectionClient(asyncore.dispatcher):
         self.fakeFilename = filename
         self.id = id
         self.typ = typ
-        if(self.typ == 'file'):
-            self.sendFile()
-        else:
-            self.sendDir()    
+        self.sendFile()
     def handle_connect(self):
         pass
     def handle_close(self):
