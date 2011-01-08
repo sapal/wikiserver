@@ -76,6 +76,7 @@ class HiddenServer(asynchat.async_chat):
         # TODO
         print 'main ls'
         tmpfile = 'hiddenServerWorkingFile' + str(random.randint(10000, 1000000)) + str(datetime.datetime.now())
+        tmpfile = '/tmp/' + tmpfile
         print tmpfile
         f = open(tmpfile, "w")
         for line in os.listdir("."):
@@ -98,6 +99,7 @@ class HiddenServer(asynchat.async_chat):
     def answerToDir(self, filename):
         print 'get dir'
         tmpfile = 'hiddenServerWorkingFile' + str(random.randint(10000, 1000000)) + str(datetime.datetime.now())
+        tmpfile = '/tmp/' + tmpfile
         f = open(tmpfile, "w")
         for line in os.listdir(filename):
             f.write(line + "\n")
