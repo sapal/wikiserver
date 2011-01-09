@@ -76,7 +76,7 @@ class FileManager :
         with self.requestInfoLock:
             fileInfos = set((id,f) for (id,f) in self.requestInfo.items())
             totalSize = sum(f.size for (id,f) in fileInfos)
-            cacheMax = 10*1024 #MAX CACHE SIZE
+            cacheMax = 1024*1024 #MAX CACHE SIZE
             if totalSize > cacheMax:
                 toRemove = sorted([(id,f) for (id,f) in fileInfos if f.usersCount == 0], 
                         key=lambda (id,f):(f.modifyTime - f.lastUse - f.useCount*120))
@@ -85,6 +85,7 @@ class FileManager :
                         del self.requestInfo[id]
                         if f.path in self.fileInfo:
                             del self.fileInfo[f.path]
+                        os.remove(f.filename)
                         totalSize -= f.size
                         if totalSize <= cacheMax:
                             break

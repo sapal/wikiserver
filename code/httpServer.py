@@ -4,8 +4,7 @@ from fileManager import fileManager,FileInfo
 from urllib import quote,unquote
 from SocketServer import ThreadingMixIn
 from mimetypes import guess_type
-from logging import basicConfig, debug, DEBUG
-#basicConfig(filename='httpServer.log', level=DEBUG, filemode='w')
+from logging import debug
 
 class HttpRequest(BaseHTTPRequestHandler):
     '''Klasa odpowiedzialna za obsługę HTTP'''
@@ -25,7 +24,7 @@ class HttpRequest(BaseHTTPRequestHandler):
                 raise IOError()
             self.send_response(200)
             type = guess_type(info.filename)[0]
-            if type is None:
+            if type is None or info.fileType == "directory":
                 type = 'text/html'
             self.send_header('Content-type', type) #TODO
             self.end_headers()
@@ -48,8 +47,14 @@ class HttpRequest(BaseHTTPRequestHandler):
                 while info.currentSize < info.size:
                     with info.fileModified:
                         info.fileModified.wait()
-                self.wfile.write('<html><head><meta http-equiv="content-type" content="text/html; charset=utf-8"/></head><body><ul>\n')
-                for line in f:
+                self.wfile.write('''<html><head><meta http-equiv="content-type" content="text/html; charset=utf-8"/>\n
+                <title>[wikiserver]:{0}</title></head>\n
+                <body><h1>[wikiserver]:{0}</h1>'''.format(unquote(self.path)))
+                if self.path != '':
+                    self.wfile.write('<h3><a href="{0}/..">do góry</a></h3>\n'.format(self.path))
+                self.wfile.write('<h2>{0}:</h2><ul>\n'.format(("Pliki" if self.path != '' else "Użytkownicy")))
+
+                for line in sorted(f):
                     self.wfile.write('<li><a href="{0}/{2}">{1}</a></li>\n'.format(self.path, line.strip(), quote(line.strip())))
                 self.wfile.write("</body></html>\n")
         except IOError:
