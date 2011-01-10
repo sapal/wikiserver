@@ -56,21 +56,21 @@ class HiddenServerConnection(asynchat.async_chat):
 
     def processResponse(self):
         """Funkcja przetwarzająca odpowiedź od HiddenServera."""
-        debug('processRespone')
+        #debug('processRespone')
         global fileManager
         r = self.response
         self.response = {}
-        debug(str(r))
-        debug('to byl debug')
+        #debug(str(r))
+        #debug('to byl debug')
         if r['response'] == "MYNAMEIS":
-            debug('mynameis')
+            #debug('mynameis')
             self.user = r['username'].strip()
             fileManager.hiddenServerConnections[self.user] = self
             self.push('Hello ' + r['username'].strip() + ' i am your master\n\n')
-            debug('Got him!')
+            #debug('Got him!')
             return
         else:
-            debug('else czyli nie mynameis')
+            #debug('else czyli nie mynameis')
             with self.stopLock:
                 request, info = self.sentRequests.get()
                 fileManager.processResponse(request['id'], r, info)
@@ -78,7 +78,7 @@ class HiddenServerConnection(asynchat.async_chat):
                 with c:
                     c.notify()
                 info.stopUsing()
-        debug('endof')    
+        #debug('endof')    
 
     def handle_error(self):
         debug("HSC:ERROR")
@@ -159,7 +159,7 @@ Zapisuje dane do odpowiedniego pliku i przy każdym zapisie wywołuje sizeChange
         except BaseException as e:
             print(e)
             print(str(self.header))
-        debug(str(self.header))
+        #debug(str(self.header))
 
     @property
     def length(self):
@@ -171,7 +171,7 @@ Zapisuje dane do odpowiedniego pliku i przy każdym zapisie wywołuje sizeChange
         self.data = []
         if self.reciveData:
             self.recived += len(data)
-            debug("TERMINATOR: " +str(self.recived))
+            #debug("TERMINATOR: " +str(self.recived))
             self.file.write(data)
             self.file.flush()
             self.fileInfo.sizeChanged(self.recived)
@@ -181,7 +181,7 @@ Zapisuje dane do odpowiedniego pliku i przy każdym zapisie wywołuje sizeChange
                 return
             term = min(self.BUFFER_SIZE,self.length - self.recived)
             self.set_terminator(term)
-            debug("New terminator: " +str(term) + str((self.recived, self.length)))
+            #debug("New terminator: " +str(term) + str((self.recived, self.length)))
             return
         self.header = parseData(data)
         self.formatHeader()
