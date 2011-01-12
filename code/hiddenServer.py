@@ -22,6 +22,7 @@ class HiddenServer(asynchat.async_chat):
         self.path = path
         if(path[-1] != '/'):
             path = path + '/'
+        self.path = path
         self.connect( (host, 8888))
         self.myname = myname
         print "Hello. Thanks for using WikiServer. You are now known as " + self.myname + "."
