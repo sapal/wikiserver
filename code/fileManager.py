@@ -92,8 +92,8 @@ class FileManager :
                 try:
                     del self.requestInfo[id]
                     os.remove(f.filename)
-                except IOError:
-                    print("błąd przy usuwaniu pliku "+f.filename)
+                except (IOError,OSError):
+                    debug("błąd przy usuwaniu pliku "+f.filename)
     
     def cleanCache(self):
         """Usuwa niepotrzebne pliki z cache."""
@@ -191,12 +191,15 @@ class FileManager :
             info.filename = filename
             info.fileType = "directory"
             info.size = info.currentSize = os.path.getsize(info.filename)
+            with self.requestInfoLock:
+                self.requestInfo[id] = info
             debug('********************************************* END')   # dorota
         else:
             try:
-                self.requestInfo[id] = FileInfo()
-                self.requestInfo[id].path = path
-                self.requestInfo[id].filename = filename
+                with self.requestInfoLock:
+                    self.requestInfo[id] = FileInfo()
+                    self.requestInfo[id].path = path
+                    self.requestInfo[id].filename = filename
                 debug("getFileInfo({0}), sending request".format(filename))
                 cond = threading.Condition()
                 with cond:
@@ -209,7 +212,8 @@ class FileManager :
                     debug("getFileInfo({0}) waiting".format(filename))
                     cond.wait()
                 debug("getFileInfo({0}), request completed".format(filename))
-                info = self.requestInfo[id]
+                with self.requestInfoLock:
+                    info = self.requestInfo[id]
                 #Wait for PushFileConnection to establish:
                 with info.fileModified:
                     if info.size == -1:
@@ -229,6 +233,10 @@ class FileManager :
                 self.requestInfo[requestId] = fileInfo
             elif HSresponse['response'] == 'OLD':
                 self.requestInfo[requestId].setModifyTime(int(HSresponse['modifytime']))
+            elif HSresponse['response'] == 'NOPE':
+                self.requestInfo[requestId].filetype = 'not found'
+                self.requestInfo[requestId].size = 0
+                self.requestInfo[requestId].currentSize = 0
             self.requestInfo[requestId].startUsing()
             self.cleanCache()
 
