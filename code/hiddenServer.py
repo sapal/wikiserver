@@ -20,6 +20,8 @@ class HiddenServer(asynchat.async_chat):
         self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
         self.host = host
         self.path = path
+        if(path[-1] != '/'):
+            path = path + '/'
         self.connect( (host, 8888))
         self.myname = myname
         print "Hello. Thanks for using WikiServer. You are now known as " + self.myname + "."
@@ -52,11 +54,16 @@ class HiddenServer(asynchat.async_chat):
             self.answerToGet()
     def answerToGet(self):
         filename = self.req['filename']
-        if(filename == '/'):
-            print 'Responding to ls of the main catalogue'
+        if(filename[0] == '/'):
+            filename = filename[1:]
+        if(self.path != '/'):
+            filename = self.path + filename
+        print 'New filename is ' + filename + ' (empty if this directory)'
+        if(filename == ''):
+            print 'Responding to ls of this directory'
             self.answerToLsMain()
             return
-        filename = filename[1:]
+        #filename = filename[1:]
         print 'Responding to request of "' + filename + '"'
         if not os.path.exists(filename):
             print '\tNo such path'
@@ -154,14 +161,18 @@ if __name__ == '__main__':
     parser = OptionParser()
     parser.add_option('--host', dest='host', help='host to connect to, default is localhost')
     parser.add_option('-n', '--name', dest='hidden_server_name', help='name of your hidden server, default is servus')
+    parser.add_option('-d', '--dir', dest='directory', help='the directory you want to share')
     (options, args) = parser.parse_args()
     host = 'localhost'
     if(options.host!=None):
         host = options.host    
     #name = 'servuś'
+    directory = '/'
+    if(options.directory!=None):
+        directory = options.directory
     if(options.hidden_server_name!=None):
         name = options.hidden_server_name
-        client = HiddenServer(host, '/', name)
+        client = HiddenServer(host, directory, name)
         asyncore.loop()
     else:
         print 'Brak nazwy serwera. Podaj z opcja -n albo --name. Więcej opcji: -h.'
