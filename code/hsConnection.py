@@ -157,7 +157,6 @@ Zapisuje dane do odpowiedniego pliku i przy każdym zapisie wywołuje sizeChange
                 self.header[key] = int(self.header[key])
             self.header['modifytime'] = float(self.header['modifytime'])
             self.header['type'] = self.header['type'].strip()
-            print(self.header)
         except BaseException as e:
             print(e)
             print(str(self.header))
