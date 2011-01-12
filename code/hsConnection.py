@@ -197,6 +197,8 @@ Zapisuje dane do odpowiedniego pliku i przy każdym zapisie wywołuje sizeChange
 
     def handle_close(self):
         debug("PFC:Close")
+        if self.fileInfo.currentSize < self.fileInfo.size:
+            self.fileInfo.setBroken()
         self.close()
         
 class PushFileServer(asyncore.dispatcher):

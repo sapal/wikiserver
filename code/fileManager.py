@@ -22,6 +22,21 @@ class FileInfo :
         self.usersCount = 0 # liczba procesów używających danego pliku 
         self.lastUse = 0
         self.useCount = 0
+        self.broken = False
+
+    def setBroken(self):
+        """Zaznacza plik jako zepsuty i usuwa go z fileManager.fileInfo,
+        jeśli to konieczne."""
+        global fileManager
+        with fileManager.requestInfoLock:
+            with self.fileModified:
+                self.broken = True
+                self.fileModified.notifyAll()
+                try:
+                    if fileManager.fileInfo[self.path] is self:
+                        del fileManager.fileInfo[self.path]
+                except KeyError:
+                    pass
 
     def setModifyTime(self, newTime):
         """Zmienia czas modyfikacji FileInfo uaktualniając
@@ -33,12 +48,11 @@ class FileInfo :
                     or self.modifyTime > fileManager.fileInfo[self.path].modifyTime):
                 fileManager.fileInfo[self.path] = self
 
-    def sizeChanged (self, newSize) :
+    def sizeChanged(self, newSize):
         """ Zmienia currentSize i robi fileModified.notifyAll() """
-        self.fileModified.acquire()
-        self.currentSize = newSize
-        self.fileModified.notifyAll()
-        self.fileModified.release()
+        with self.fileModified:
+            self.currentSize = newSize
+            self.fileModified.notifyAll()
 
     def startUsing(self):
         """Zaczynam pracę z tym FileInfo,

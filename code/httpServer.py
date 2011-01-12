@@ -71,6 +71,8 @@ class HttpRequest(BaseHTTPRequestHandler):
                 written = 0
                 chunkSize = 16*1024
                 while written < info.size:
+                    if info.broken:
+                        raise IOError("błąd przy pobieraniu pliku")
                     if written == info.currentSize:
                         with info.fileModified:
                             info.fileModified.wait()
@@ -113,6 +115,8 @@ class HttpRequest(BaseHTTPRequestHandler):
         if path[-1] == '/':
             path = path[:-1]
         while fileInfo.currentSize < fileInfo.size:
+            if info.broken:
+                raise IOError("błąd przy pobieraniu pliku")
             with fileInfo.fileModified:
                 fileInfo.fileModified.wait()
         res.append('''<html><head><meta http-equiv="content-type" content="text/html; charset=utf-8"/>\n
