@@ -89,8 +89,10 @@ class HiddenServer(asynchat.async_chat):
         else:
             print '\tIt is a directory.'
         if('date' in self.req):
-            if(self.req['data'] + 100 < str(os.path.getmtime(filename))):
+            print '\t\tGot a file with a date'
+            if(self.req['date'] > os.path.getmtime(filename)):
                 self.buffer += 'OK\nid:' + self.req['id'] + '\n\n'
+                print "\t\tDate is OK"
                 return
         self.buffer += 'OLD\nid:' + self.req['id'] + '\nsize:'
         self.buffer += str(os.path.getsize(filename)) + '\n'
@@ -157,7 +159,7 @@ if __name__ == '__main__':
     host = 'localhost'
     if(options.host!=None):
         host = options.host    
-    name = 'servuś'
+    #name = 'servuś'
     if(options.hidden_server_name!=None):
         name = options.hidden_server_name
         client = HiddenServer(host, '/', name)
