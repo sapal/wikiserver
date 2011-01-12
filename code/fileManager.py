@@ -46,7 +46,7 @@ class FileInfo :
         with fileManager.requestInfoLock:
             if (self.path not in fileManager.fileInfo 
                     or self.modifyTime > fileManager.fileInfo[self.path].modifyTime):
-                print("UPDATE fileInfo({0})".format(self.modifyTime))
+                #print("UPDATE fileInfo({0})".format(self.modifyTime))
                 fileManager.fileInfo[self.path] = self
 
     def sizeChanged(self, newSize):
@@ -126,7 +126,6 @@ class FileManager :
         with self.requestInfoLock:
             if filename in self.fileInfo:
                 info = self.fileInfo[filename]
-                print("jest w cache")
             else:
                 info = FileInfo()
             info.startUsing()

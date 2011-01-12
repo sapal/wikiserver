@@ -5,6 +5,7 @@ from urllib import quote,unquote
 from SocketServer import ThreadingMixIn
 from mimetypes import guess_type
 from logging import debug
+from helper import formatDate
 
 class HttpRequest(BaseHTTPRequestHandler):
     '''Klasa odpowiedzialna za obsługę HTTP'''
@@ -34,6 +35,12 @@ class HttpRequest(BaseHTTPRequestHandler):
             #print(self.headers)
             if info.fileType == "not found":
                 raise IOError()
+            if 'If-Modified-Since' in self.headers: 
+                #print(self.headers['If-Modified-Since'], formatDate(info.modifyTime))
+                if self.headers['If-Modified-Since'] == formatDate(info.modifyTime):
+                    #print("304 "*10)
+                    self.send_response(304)
+                    return
             begin = 0
             end = info.size
             partial = False
@@ -49,6 +56,7 @@ class HttpRequest(BaseHTTPRequestHandler):
             if type is None or info.fileType == "directory":
                 type = 'text/html; charset=UTF-8'
             self.send_header('Content-type', type)
+            self.send_header('Last-Modified', formatDate(info.modifyTime))
             length = end - begin
             size = info.size
             if info.fileType == "directory":
