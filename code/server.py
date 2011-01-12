@@ -17,4 +17,5 @@ if __name__=="__main__":
     try:
         hsConnection.startHSServer()
     except KeyboardInterrupt:
+        fileManager.removeCache()
         print("Shutting Down")

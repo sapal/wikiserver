@@ -54,6 +54,10 @@ class HttpRequest(BaseHTTPRequestHandler):
             if info.fileType == "directory":
                 listing = self.getDirectoryListing(self.path, info)
                 size = len(listing)
+                if not partial:
+                    begin = 0
+                    end = size
+                    length = end-begin
             if partial:
                 self.send_header('Content-Range:', 'bytes {0}-{1}/{2}'.format(begin, end, size))
             self.send_header('Content-Length', length)

@@ -69,6 +69,17 @@ class FileManager :
         self.lastRequestId = 0
         self.requestInfoLock = threading.RLock() # lock blokujący dostęp do requestInfo i fileInfo
         self.idLock = threading.RLock()
+
+    def removeCache(self):
+        """Usuwa wszystkie pliki z cache (także te używane)."""
+        with self.requestInfoLock:
+            toRemove = [(id,f) for (id,f) in self.requestInfo.items()]
+            for id, f in toRemove:
+                try:
+                    del self.requestInfo[id]
+                    os.remove(f.filename)
+                except IOError:
+                    print("błąd przy usuwaniu pliku "+f.filename)
     
     def cleanCache(self):
         """Usuwa niepotrzebne pliki z cache."""
