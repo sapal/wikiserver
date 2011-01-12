@@ -19,7 +19,6 @@ class HiddenServer(asynchat.async_chat):
         asynchat.async_chat.__init__(self)
         self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
         self.host = host
-        self.path = path
         if(path[-1] != '/'):
             path = path + '/'
         self.path = path
