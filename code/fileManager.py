@@ -11,7 +11,7 @@ basicConfig(filename='log', level=DEBUG, filemode='w')
 class FileInfo :
     '''Klasa odpowiedzialna za dostarczanie informacji o plikach'''
     def __init__(self) :
-        self.modifyTime = 0 
+        self.modifyTime = 0.0
         self.size = -1 # to oznacza, że PushFileConnection jeszcze się nie podłączyło
         self.currentSize = 0
         self.path = "" # bezwzględna ścieżka do pliku
@@ -46,6 +46,7 @@ class FileInfo :
         with fileManager.requestInfoLock:
             if (self.path not in fileManager.fileInfo 
                     or self.modifyTime > fileManager.fileInfo[self.path].modifyTime):
+                print("UPDATE fileInfo({0})".format(self.modifyTime))
                 fileManager.fileInfo[self.path] = self
 
     def sizeChanged(self, newSize):
@@ -97,11 +98,10 @@ class FileManager :
     
     def cleanCache(self):
         """Usuwa niepotrzebne pliki z cache."""
-        #TODO:przetestować
         with self.requestInfoLock:
             fileInfos = set((id,f) for (id,f) in self.requestInfo.items())
             totalSize = sum(f.size for (id,f) in fileInfos)
-            cacheMax = 1024*1024 #MAX CACHE SIZE
+            cacheMax = 10*1024*1024 #MAX CACHE SIZE
             if totalSize > cacheMax:
                 toRemove = sorted([(id,f) for (id,f) in fileInfos if f.usersCount == 0], 
                         key=lambda (id,f):(f.modifyTime - f.lastUse - f.useCount*120))
@@ -121,9 +121,12 @@ class FileManager :
         """Zwraca fileInfo pliku filename (ścieżka bezwzględna)
         o najpóźniejszym czasie modyfikacji i zaczyna go używać.
         Gdy taki nie istnieje, zwraca nowe FileInfo."""
+        if len(filename) == 0 or filename[0] != '/':
+            filename = '/'+filename
         with self.requestInfoLock:
             if filename in self.fileInfo:
                 info = self.fileInfo[filename]
+                print("jest w cache")
             else:
                 info = FileInfo()
             info.startUsing()
@@ -232,7 +235,7 @@ class FileManager :
             if HSresponse['response'] == 'OK':
                 self.requestInfo[requestId] = fileInfo
             elif HSresponse['response'] == 'OLD':
-                self.requestInfo[requestId].setModifyTime(int(HSresponse['modifytime']))
+                self.requestInfo[requestId].setModifyTime(float(HSresponse['modifytime']))
             elif HSresponse['response'] == 'NOPE':
                 self.requestInfo[requestId].filetype = 'not found'
                 self.requestInfo[requestId].size = 0

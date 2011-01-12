@@ -1,4 +1,5 @@
 # coding=utf-8
+from wsgiref.handlers import format_date_time
 
 def parseData(data):
     """ Funkcja zwracająca słownik, powstały w wyniku parsowania 
@@ -15,4 +16,7 @@ def parseData(data):
         r[field] = value
     return r
    
+
+def formatDate(timestamp):
+    return format_date_time(timestamp)
 

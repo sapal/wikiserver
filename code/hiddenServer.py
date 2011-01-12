@@ -8,7 +8,6 @@ from helper import parseData
 import os
 import threading
 import datetime
-import time
 from optparse import OptionParser
 
 def done_fun():
@@ -88,16 +87,16 @@ class HiddenServer(asynchat.async_chat):
             print '\tIt is a file.'
         else:
             print '\tIt is a directory.'
-        if('date' in self.req):
-            print '\t\tGot a file with a date'
-            if(self.req['date'] > os.path.getmtime(filename)):
+        if('modifytime' in self.req):
+            print '\t\tGot a file with a modifytime'
+            if(float(self.req['modifytime']) >= os.path.getmtime(filename)):
                 self.buffer += 'OK\nid:' + self.req['id'] + '\n\n'
-                print "\t\tDate is OK"
+                print "\t\tModifytime is OK"
                 return
         self.buffer += 'OLD\nid:' + self.req['id'] + '\nsize:'
         self.buffer += str(os.path.getsize(filename)) + '\n'
         self.buffer += 'type:file\n'
-        self.buffer += 'modifytime:0\n\n' #TODO:zrobić
+        self.buffer += 'modifytime:{0}\n\n'.format(os.path.getmtime(filename))
         newThreadPushFile(self.host, filename, fakeFilename, typ, self.req['id'])
     def answerToDir(self, filename):
         tmpfile = 'hiddenServerWorkingFile' + str(random.randint(10000, 1000000)) + str(datetime.datetime.now())
@@ -132,7 +131,7 @@ class PushFileConnectionClient(socket.socket):
         self.buffer += 'size:' + str(os.path.getsize(self.filename)) + '\n'
         self.buffer += 'filename:' + self.fakeFilename + '\n'
         self.buffer += 'type:' + self.typ + '\n'
-        self.buffer += 'modifytime:0\n\n' #TODO:zrobić
+        self.buffer += 'modifytime:{0}\n\n'.format(os.path.getmtime(self.filename)) 
         self.sendBuffer()
         f = open(self.filename, "rb")
         data = f.read()

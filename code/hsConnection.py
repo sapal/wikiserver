@@ -40,10 +40,10 @@ class HiddenServerConnection(asynchat.async_chat):
             path = self.user + request['filename']
             with self.stopLock:
                 info = fileManager.startUsingFileInfo(path)
-                request['modifyTime'] = info.modifyTime
+                request['modifytime'] = info.modifyTime
                 debug('REQUEST: '+self.user+' '+str(request))
                 self.sentRequests.put((request, info))
-            self.buffer += "GET\nfilename:{filename}\nmodifyTime:{modifyTime}\nid:{id}\noriginalRequest:{0}\n\n".format(
+            self.buffer += "GET\nfilename:{filename}\nmodifytime:{modifytime}\nid:{id}\noriginalRequest:{0}\n\n".format(
                 base64.b64encode(request['originalRequest']), **request) 
             while len(self.buffer)>0:
                 sent = self.send(self.buffer)
@@ -155,7 +155,9 @@ Zapisuje dane do odpowiedniego pliku i przy każdym zapisie wywołuje sizeChange
         try:
             for key in ('size','id'):
                 self.header[key] = int(self.header[key])
+            self.header['modifytime'] = float(self.header['modifytime'])
             self.header['type'] = self.header['type'].strip()
+            print(self.header)
         except BaseException as e:
             print(e)
             print(str(self.header))
