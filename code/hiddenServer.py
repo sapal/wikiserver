@@ -59,7 +59,7 @@ class HiddenServer(asynchat.async_chat):
             return
         filename = filename[1:]
         print 'Responding to request of "' + filename + '"'
-        if os.path.exists(filename) == False:
+        if not os.path.exists(filename):
             print '\tNo such path'
             self.answerToNope()
             return

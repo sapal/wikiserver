@@ -115,7 +115,7 @@ class HttpRequest(BaseHTTPRequestHandler):
         if path[-1] == '/':
             path = path[:-1]
         while fileInfo.currentSize < fileInfo.size:
-            if info.broken:
+            if fileInfo.broken:
                 raise IOError("błąd przy pobieraniu pliku")
             with fileInfo.fileModified:
                 fileInfo.fileModified.wait()

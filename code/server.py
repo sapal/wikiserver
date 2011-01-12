@@ -5,7 +5,6 @@ import threading
 from fileManager import fileManager
 import httpServer
 import hsConnection
-import asyncore
 
 if __name__=="__main__":
     http = threading.Thread(target=httpServer.start)

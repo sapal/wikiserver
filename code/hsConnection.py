@@ -66,7 +66,8 @@ class HiddenServerConnection(asynchat.async_chat):
             #debug('mynameis')
             self.user = r['username'].strip()
             fileManager.hiddenServerConnections[self.user] = self
-            self.push('Hello ' + r['username'].strip() + ' i am your master\n\n')
+            self.push('Hello ' + self.user + ' i am your master\n\n')
+            print("{0} connected.".format(self.user))
             #debug('Got him!')
             return
         else:
@@ -114,7 +115,6 @@ class HSServer(asyncore.dispatcher):
         self.listen(5)
 
     def handle_accept(self):
-        print("ACCEPT")
         p = self.accept()
         if not p:
             return
@@ -127,7 +127,7 @@ def startHSServer():
     print("Starting HSServer.")
     asyncore.loop(map=m)
 
-class PushFileConnection(asynchat.async_chat):
+class PushFileConnection(asynchat.async_chat, object):
     '''Klasa reprezentująca połączenie przesyłające plik z HiddenServera do Servera.
 Zapisuje dane do odpowiedniego pliku i przy każdym zapisie wywołuje sizeChanged()'''
     ac_in_buffer_size = 32*1024
