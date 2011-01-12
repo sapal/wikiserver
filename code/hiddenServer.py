@@ -23,7 +23,7 @@ class HiddenServer(asynchat.async_chat):
         self.path = path
         self.connect( (host, 8888))
         self.myname = myname
-        print "Hello. My name is " + self.myname
+        print "Hello. Thanks for using WikiServer. You are now known as " + self.myname + "."
         self.buffer = 'MYNAMEIS\nusername:' + self.myname + '\n\n'
         # print 'MYNAMEIS:' + self.myname + '\r\n'
         self.data = []
@@ -39,7 +39,8 @@ class HiddenServer(asynchat.async_chat):
         return (len(self.buffer) > 0)
     def handle_write(self):
         sent = self.send(self.buffer)
-        print("HS: sent:"+str(self.buffer[:sent]))
+        print "\tSending info."
+        # print("HS: sent:"+str(self.buffer[:sent]))
         self.buffer = self.buffer[sent:]
     def found_terminator(self):
         self.processRequest()
@@ -47,22 +48,22 @@ class HiddenServer(asynchat.async_chat):
         request = "".join(self.data)
         self.data = []
         self.req = parseData(request)
-        print self.req
+        #print self.req
         if(self.req['response'] == 'GET'):
             self.answerToGet()
     def answerToGet(self):
         filename = self.req['filename']
         if(filename == '/'):
-            print 'ls of main catalogue'
+            print 'Responding to ls of the main catalogue'
             self.answerToLsMain()
             return
         filename = filename[1:]
-        print 'filename ' + filename
+        print 'Responding to request of "' + filename + '"'
         if os.path.exists(filename) == False:
-            print 'No such path'
+            print '\tNo such path'
             self.answerToNope()
             return
-        print 'Ok path'
+        print '\tOk path'
         if(os.path.isfile(filename)):
             self.answerToFile(filename, filename, 'file')
             return
@@ -73,11 +74,9 @@ class HiddenServer(asynchat.async_chat):
     def answerToNope(self):
         self.buffer += 'NOPE\nid:' + self.req['id'] + '\n\n'
     def answerToLsMain(self):
-        # TODO
-        print 'main ls'
         tmpfile = 'hiddenServerWorkingFile' + str(random.randint(10000, 1000000)) + str(datetime.datetime.now())
         tmpfile = '/tmp/' + tmpfile
-        print tmpfile
+        print "debug - tmpfile is : " + tmpfile
         f = open(tmpfile, "w")
         for line in os.listdir("."):
             f.write(line + "\n")
@@ -85,7 +84,10 @@ class HiddenServer(asynchat.async_chat):
         self.answerToFile(tmpfile, '/', 'directory')
         # usuwane w PushFileConnection - po przeslaniu
     def answerToFile(self, filename, fakeFilename, typ):
-        print 'its a file'
+        if(typ == 'file'):
+            print '\tIt is a file.'
+        else:
+            print '\tIt is a directory.'
         if('date' in self.req):
             if(self.req['data'] + 100 < str(os.path.getmtime(filename))):
                 self.buffer += 'OK\nid:' + self.req['id'] + '\n\n'
@@ -94,10 +96,8 @@ class HiddenServer(asynchat.async_chat):
         self.buffer += str(os.path.getsize(filename)) + '\n'
         self.buffer += 'type:file\n'
         self.buffer += 'modifytime:0\n\n' #TODO:zrobić
-        print 'new thread?'
         newThreadPushFile(self.host, filename, fakeFilename, typ, self.req['id'])
     def answerToDir(self, filename):
-        print 'get dir'
         tmpfile = 'hiddenServerWorkingFile' + str(random.randint(10000, 1000000)) + str(datetime.datetime.now())
         tmpfile = '/tmp/' + tmpfile
         f = open(tmpfile, "w")
@@ -110,7 +110,7 @@ class HiddenServer(asynchat.async_chat):
 class PushFileConnectionClient(socket.socket):
     def __init__(self, host, filename, fakeFilename, typ, id):
         socket.socket.__init__(self, socket.AF_INET, socket.SOCK_STREAM)
-        print 'hello init'
+        #print 'hello init'
         self.connect( (host, 9999))
         self.buffer = ""
         self.filename = filename
@@ -122,7 +122,7 @@ class PushFileConnectionClient(socket.socket):
         while len(self.buffer)>0:
             sent = self.send(self.buffer)
             self.buffer = self.buffer[sent:]
-            print(sent)
+            # print(sent)
 
     def sendFile(self):
         self.buffer += 'PUSH\n'
@@ -139,7 +139,7 @@ class PushFileConnectionClient(socket.socket):
         self.close()
         if(self.typ == 'directory'):
             os.remove(self.filename)
-        print("SENT")
+        print("\tFile sent.")
         
 def newThreadPushFile(host, filename, fakeFilename, typ, id):
     pfc = PushFileConnectionClient(host, filename, fakeFilename, typ, id)
@@ -147,7 +147,7 @@ def newThreadPushFile(host, filename, fakeFilename, typ, id):
     pfcThread = threading.Thread(target=pfc.sendFile)
     pfcThread.deamon = True
     pfcThread.start()
-    print 'launched'
+    #print 'launched'
 
 if __name__ == '__main__':
     parser = OptionParser()
@@ -163,4 +163,4 @@ if __name__ == '__main__':
         client = HiddenServer(host, '/', name)
         asyncore.loop()
     else:
-        print 'Brak nazwy serwera. Podaj z opcja -n'
+        print 'Brak nazwy serwera. Podaj z opcja -n albo --name. Więcej opcji: -h.'
