@@ -11,9 +11,9 @@ import os
 
 if __name__=="__main__":
     parser = OptionParser()
-    parser.add_option('-p', '--port', dest='httpPort', help='port for http server', default=8080, type="int")
-    parser.add_option('-c', '--cache-directory', dest='cacheDir', help='directory for storing temporary files (cache)', default='cache')
-    parser.add_option('-s', '--cache-max-size', dest='cacheMaxSize', help='maximum size of temporary files (in KB). Note that actual disk usage may be higher in some special cases (high server load)', default=10*1024, type="int")
+    parser.add_option('-p', '--port', dest='httpPort', help='port for http server. Default: 8080', default=8080, type="int")
+    parser.add_option('-c', '--cache-directory', dest='cacheDir', help='directory for storing temporary files (cache). Default: cache', default='cache')
+    parser.add_option('-s', '--cache-max-size', dest='cacheMaxSize', help='maximum size of temporary files (in KB). Note that actual disk usage may be higher in some special cases (high server load). Default: 100MB', default=100*1024, type="int")
     options, args = parser.parse_args()
     config.httpPort = options.httpPort
     config.cacheDir = options.cacheDir
