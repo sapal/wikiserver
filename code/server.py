@@ -19,7 +19,8 @@ if __name__=="__main__":
     config.cacheDir = options.cacheDir
     if config.cacheDir[-1] == '/':
         config.cacheDir = config.cacheDir[:-1]
-    os.makedirs(config.cacheDir)
+    if not os.path.exists(config.cacheDir):
+        os.makedirs(config.cacheDir)
     config.cacheMaxSize = options.cacheMaxSize*1024
 
     http = threading.Thread(target=httpServer.start)
