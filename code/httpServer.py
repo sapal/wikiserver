@@ -6,6 +6,7 @@ from SocketServer import ThreadingMixIn
 from mimetypes import guess_type
 from logging import debug
 from helper import formatDate
+import config
 
 class HttpRequest(BaseHTTPRequestHandler):
     '''Klasa odpowiedzialna za obsługę HTTP'''
@@ -141,10 +142,10 @@ class HttpRequest(BaseHTTPRequestHandler):
 
 class HttpServer(ThreadingMixIn, HTTPServer):
     '''Klasa odpowiedzialna za tworzenie HttpRequestów'''
-    def __init__(self, interface='', port=8080, handler=HttpRequest) :
+    def __init__(self, interface='', port=config.httpPort, handler=HttpRequest) :
         HTTPServer.__init__(self,(interface,port),handler)
 
 def start():
-    server = HttpServer()
+    server = HttpServer(port=config.httpPort)
     print("Starting HttpServer.")
     server.serve_forever()

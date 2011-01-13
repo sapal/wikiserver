@@ -3,6 +3,7 @@
 import threading
 import os
 import time
+import config
 from logging import basicConfig, debug, DEBUG
 basicConfig(filename='log', level=DEBUG, filemode='w')
 #def debug(x):
@@ -101,7 +102,7 @@ class FileManager :
         with self.requestInfoLock:
             fileInfos = set((id,f) for (id,f) in self.requestInfo.items())
             totalSize = sum(f.size for (id,f) in fileInfos)
-            cacheMax = 10*1024*1024 #MAX CACHE SIZE
+            cacheMax = config.cacheMaxSize
             if totalSize > cacheMax:
                 toRemove = sorted([(id,f) for (id,f) in fileInfos if f.usersCount == 0], 
                         key=lambda (id,f):(f.modifyTime - f.lastUse - f.useCount*120))
@@ -162,14 +163,14 @@ class FileManager :
         """
         path = self._stripPath(path)
         if path == '':
-            return 'cache/users' #users to specjalny plik, w którym wylistowani są aktywni użytkownicy
+            return config.cacheDir + '/users' #users to specjalny plik, w którym wylistowani są aktywni użytkownicy
         if user is None:
         	user = self.getUser(path)
         	path = self.getRelativePath(path)
         path = path.replace('/','.')
         if id is None:
             id = self.fileInfo['{user}.{path}'.format(user=user, path=path)]
-        return "cache/{id}.{user}.{path}".format(id=id, user=user, path=path)
+        return config.cacheDir + "/{id}.{user}.{path}".format(id=id, user=user, path=path)
 
     def getUser(self, path):
         """Zwraca nazwę użytkownika na podstawie ścieżki (bezwzględnej)."""
@@ -183,7 +184,7 @@ class FileManager :
         info = FileInfo()
         id = self.nextRequestId()
         filename = self.getFilename(path, id=id)
-        if filename == "cache/users":
+        if filename == config.cacheDir + "/users":
             debug('************************************* ASK FOR USERS') # dorota
             f = open(filename,"w")
             for user in self.hiddenServerConnections.keys():
@@ -193,6 +194,7 @@ class FileManager :
             info.filename = filename
             info.fileType = "directory"
             info.size = info.currentSize = os.path.getsize(info.filename)
+            info.modifyTime = time.time()
             with self.requestInfoLock:
                 self.requestInfo[id] = info
             debug('********************************************* END')   # dorota
