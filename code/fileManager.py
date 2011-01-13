@@ -2,6 +2,7 @@
 
 import threading
 import os
+import shutil
 import time
 import config
 from logging import basicConfig, debug, DEBUG
@@ -143,7 +144,7 @@ class FileManager :
     def _stripPath(self, path):
         """Usuwa zbędne spacje/slashe ze ścieżki."""
         path = path.strip()
-        if path[0] == '/':
+        if len(path) > 0 and path[0] == '/':
             path = path[1:]
         if len(path) > 0 and path[-1] == '/':
             path = path[:-1]
@@ -186,6 +187,9 @@ class FileManager :
         info = FileInfo()
         id = self.nextRequestId()
         filename = self.getFilename(path, id=id)
+        path = self._stripPath(path)
+        info.path = path
+        info.filename = filename
         if filename == config.cacheDir + "/users":
             debug('************************************* ASK FOR USERS') # dorota
             f = open(filename,"w")
@@ -196,16 +200,24 @@ class FileManager :
             info.filename = filename
             info.fileType = "directory"
             info.size = info.currentSize = os.path.getsize(info.filename)
-            info.modifyTime = time.time()
+            info.setModifyTime(time.time())
             with self.requestInfoLock:
                 self.requestInfo[id] = info
+                info.startUsing()
             debug('********************************************* END')   # dorota
+        elif self.getUser(path) == 'favicon.ico':
+            shutil.copy(config.dataDir + os.sep + 'favicon.ico', config.cacheDir + os.sep + 'favicon.ico')
+            info.filename = config.cacheDir + os.sep + 'favicon.ico'
+            info.fileType = "file"
+            info.size = info.currentSize = os.path.getsize(info.filename)
+            info.setModifyTime(os.path.getmtime(info.filename))
+            with self.requestInfoLock:
+                self.requestInfo[id] = info
+                info.startUsing()
         else:
             try:
                 with self.requestInfoLock:
-                    self.requestInfo[id] = FileInfo()
-                    self.requestInfo[id].path = path
-                    self.requestInfo[id].filename = filename
+                    self.requestInfo[id] = info
                 debug("getFileInfo({0}), sending request".format(filename))
                 cond = threading.Condition()
                 with cond:
@@ -221,9 +233,10 @@ class FileManager :
                 with self.requestInfoLock:
                     info = self.requestInfo[id]
                 #Wait for PushFileConnection to establish:
-                with info.fileModified:
-                    if info.size == -1:
-                        info.fileModified.wait()
+                while info.size == -1:
+                    with info.fileModified:
+                        if info.size == -1:
+                            info.fileModified.wait()
             except BaseException:
                 import traceback
                 debug(traceback.format_exc())
