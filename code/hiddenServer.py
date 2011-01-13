@@ -1,17 +1,17 @@
 #!/usr/bin/env python
 # coding=utf-8
 
-import random   
 import asyncore, socket	
 import asynchat
 from helper import parseData
 import os
 import threading
-import datetime
+from tempfile import mkstemp
 from optparse import OptionParser
 
 def done_fun():
     print 'byebye'
+
 
 class HiddenServer(asynchat.async_chat):
     def __init__(self, host, path, myname):
@@ -76,19 +76,11 @@ class HiddenServer(asynchat.async_chat):
         if(os.path.isdir(filename)):
             self.answerToDir(filename)
             return
-            
+
     def answerToNope(self):
         self.buffer += 'NOPE\nid:' + self.req['id'] + '\n\n'
     def answerToLsMain(self):
-        tmpfile = 'hiddenServerWorkingFile' + str(random.randint(10000, 1000000)) + str(datetime.datetime.now())
-        tmpfile = '/tmp/' + tmpfile
-        print "debug - tmpfile is : " + tmpfile
-        f = open(tmpfile, "w")
-        for line in os.listdir("."):
-            f.write(line + "\n")
-        f.close()                
-        self.answerToFile(tmpfile, '/', 'directory')
-        # usuwane w PushFileConnection - po przeslaniu
+        self.answerToDir('.')
     def answerToFile(self, filename, fakeFilename, typ):
         if(typ == 'file'):
             print '\tIt is a file.'
@@ -106,11 +98,12 @@ class HiddenServer(asynchat.async_chat):
         self.buffer += 'modifytime:{0}\n\n'.format(os.path.getmtime(filename))
         newThreadPushFile(self.host, filename, fakeFilename, typ, self.req['id'])
     def answerToDir(self, filename):
-        tmpfile = 'hiddenServerWorkingFile' + str(random.randint(10000, 1000000)) + str(datetime.datetime.now())
-        tmpfile = '/tmp/' + tmpfile
-        f = open(tmpfile, "w")
-        for line in os.listdir(filename):
-            f.write(line + "\n")
+        f,tmpfile = mkstemp()
+        os.close(f)
+        f = open(tmpfile, 'w')
+        print "debug - tmpfile is : " + tmpfile
+        for line in os.listdir(unicode(filename)):
+            f.write(line.encode("utf-8") + "\n")
         f.close()                
         self.answerToFile(tmpfile, filename, 'directory')
         # usuwane w PushFileConnection - po przeslaniu
@@ -141,10 +134,14 @@ class PushFileConnectionClient(socket.socket):
         self.buffer += 'modifytime:{0}\n\n'.format(os.path.getmtime(self.filename)) 
         self.sendBuffer()
         f = open(self.filename, "rb")
-        data = f.read()
-        self.buffer += data
-        self.sendBuffer()
+        dSize = 32*1024
+        data = f.read(dSize)
+        while len(data) > 0:
+            self.buffer += data
+            self.sendBuffer()
+            data = f.read(dSize)
         self.close()
+        f.close()
         if(self.typ == 'directory'):
             os.remove(self.filename)
         print("\tFile sent.")

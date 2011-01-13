@@ -45,10 +45,13 @@ class HttpRequest(BaseHTTPRequestHandler):
             begin = 0
             end = info.size
             partial = False
-            if "range" in self.headers:
-                begin,end = map(int,self.headers["range"].partition('=')[2].split('-'))
-                partial = True
-                #print("LOL:{0} {1}".format(begin,end))
+            try:
+                if "range" in self.headers:
+                    begin,end = map(int,self.headers["range"].partition('=')[2].split('-'))
+                    partial = True
+                    #print("LOL:{0} {1}".format(begin,end))
+            except:
+                pass
             if partial:
                 self.send_response(206)
             else:
