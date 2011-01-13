@@ -128,16 +128,18 @@ class HttpRequest(BaseHTTPRequestHandler):
                 raise IOError("błąd przy pobieraniu pliku")
             with fileInfo.fileModified:
                 fileInfo.fileModified.wait()
-        res.append('''<html><head><meta http-equiv="content-type" content="text/html; charset=utf-8"/>\n
-        <title>[wikiserver]:{0}</title></head>\n
-        <body><h1>[wikiserver]:{0}</h1>'''.format(unquote(path)))
+        res.append('''<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+        <html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+        <title>[wikiserver]:{0}</title>
+        <link rel="shortcut icon" href="/favicon.ico" />
+        </head><body><h1>[wikiserver]:{0}</h1>'''.format(unquote(path)))
         if path != '':
             res.append('<h3><a href="{0}/..">do góry</a></h3>\n'.format(path))
         res.append('<h2>{0}:</h2><ul>\n'.format(("Pliki" if path != '' else "Użytkownicy")))
 
         for line in sorted(f):
             res.append('<li><a href="{0}/{2}">{1}</a></li>\n'.format(path, line.strip(), quote(line.strip())))
-        res.append("</body></html>\n")
+        res.append("</ul></body></html>\n")
         return "".join(res)
 
     def log_message(self, format, *args):
