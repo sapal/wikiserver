@@ -206,11 +206,16 @@ class FileManager :
                 info.startUsing()
             debug('********************************************* END')   # dorota
         elif self.getUser(path) == 'favicon.ico':
-            shutil.copy(config.dataDir + os.sep + 'favicon.ico', config.cacheDir + os.sep + 'favicon.ico')
+            cachedFilename =  config.cacheDir + os.sep + 'favicon.ico'
+            dataFilename = config.dataDir + os.sep + 'favicon.ico'
+            mtime = os.path.getmtime(dataFilename)
+            if not os.path.exists(cachedFilename): 
+                shutil.copy(dataFilename, cachedFilename)
+                os.utime(cachedFilename, (mtime, mtime))
             info.filename = config.cacheDir + os.sep + 'favicon.ico'
             info.fileType = "file"
             info.size = info.currentSize = os.path.getsize(info.filename)
-            info.setModifyTime(os.path.getmtime(info.filename))
+            info.setModifyTime(mtime)
             with self.requestInfoLock:
                 self.requestInfo[id] = info
                 info.startUsing()
