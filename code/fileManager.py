@@ -101,7 +101,7 @@ class FileManager :
         """Usuwa niepotrzebne pliki z cache."""
         with self.requestInfoLock:
             fileInfos = set((id,f) for (id,f) in self.requestInfo.items())
-            totalSize = sum(f.size for (id,f) in fileInfos)
+            totalSize = sum(f.size for f in set(f for (id,f) in fileInfos))
             cacheMax = config.cacheMaxSize
             if totalSize > cacheMax:
                 toRemove = sorted([(id,f) for (id,f) in fileInfos if f.usersCount == 0], 
@@ -111,12 +111,14 @@ class FileManager :
                         del self.requestInfo[id]
                         if f.path in self.fileInfo:
                             del self.fileInfo[f.path]
-                        os.remove(f.filename)
+                        if f.fileType != 'not found':
+                            os.remove(f.filename)
                         totalSize -= f.size
                         if totalSize <= cacheMax:
                             break
-                    except BaseException as e:
-                        print("ERROR(CACHE):"+str(e))
+                    except BaseException:
+                        #print("ERROR(CACHE):"+str(e))
+                        pass
 
     def startUsingFileInfo(self, filename):
         """Zwraca fileInfo pliku filename (ścieżka bezwzględna)
