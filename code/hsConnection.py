@@ -67,7 +67,7 @@ class HiddenServerConnection(asynchat.async_chat):
             self.user = r['username'].strip()
             fileManager.hiddenServerConnections[self.user] = self
             self.push('Hello ' + self.user + ' i am your master\n\n')
-            print("{0} connected.".format(self.user))
+            print("SW: User '{0}' connected.".format(self.user))
             #debug('Got him!')
             return
         else:
@@ -195,6 +195,7 @@ Zapisuje dane do odpowiedniego pliku i przy każdym zapisie wywołuje sizeChange
             self.set_terminator(min(self.BUFFER_SIZE,self.length - self.recived))
         else:
             self.fileInfo.sizeChanged(0)
+        print("PUSH FILE: '{file}' (size:{size})".format(file=self.fileInfo.path, size=self.fileInfo.size))
 
     def handle_close(self):
         debug("PFC:Close")

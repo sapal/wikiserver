@@ -140,6 +140,9 @@ class HttpRequest(BaseHTTPRequestHandler):
         res.append("</body></html>\n")
         return "".join(res)
 
+    def log_message(self, format, *args):
+        print("HTTP: "+ (format%args)+ " {0}:{1}".format(*(self.client_address)))
+
 class HttpServer(ThreadingMixIn, HTTPServer):
     '''Klasa odpowiedzialna za tworzenie HttpRequestów'''
     def __init__(self, interface='', port=config.httpPort, handler=HttpRequest) :
