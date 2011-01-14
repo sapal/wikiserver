@@ -1,0 +1,124 @@
+\documentclass[a4paper,notitlepage]{article}
+\usepackage[a4paper, top=2.5cm, bottom=2.5cm, left=2cm, right=2cm]{geometry}
+
+\usepackage{listings}
+\usepackage[utf8]{inputenc}
+\usepackage{polski}
+\usepackage{amsmath}
+\usepackage{alltt}
+\usepackage{graphicx}
+\usepackage{fancyhdr}
+\usepackage[
+	bookmarks, 
+	colorlinks=true, 
+	pdftitle={WikiServer - Protokoły}, 
+	pdfauthor={Dorota Wąs, Michał Sapalski}, 
+]{hyperref}
+\newlength{\lword}
+\newcommand{\define}[3]{
+\begin{samepage}
+{\settowidth{\lword}{
+\textbf{\large #1} = }\vspace{0.2cm}\par\noindent\hangindent=\lword
+\textbf{\large #1} = \emph{#2} #3\vspace{0.2cm}\par}
+\end{samepage}
+}
+\lstset{
+    language=c++,
+    commentstyle=\itshape,
+    numbers=left,
+    numbersep=5pt,
+    frame=single,
+    tabsize=2,
+    breaklines=true,
+    breakatwhitespace=true,
+    inputencoding=utf8,
+    extendedchars=true,
+	texcl=true,
+	mathescape=true
+}
+\begin{document}
+\pagestyle{fancy}
+\lhead{Protocols --- \textsc{WikiServer}}
+\rhead{Dorota Wąs, Michał Sapalski}
+\tableofcontents
+\section{Protokół SW}
+Protokół SW (\texttt{Sapalski-Wąs}) służy do komunikacji pomiędzy Hidden Serverem a Serverem. \\
+Hidden Server podłącza się do Servera (na porcie 8888) i wysyła polecenie postaci:
+\begin{itemize}
+    \item \texttt{MYNAMEIS:username}
+\end{itemize}
+Połączenie to powinno być przez cały czas podtrzymywane.\\
+
+Server wysyła do Hidden Servera polecenia postaci:
+\begin{enumerate}
+    \item
+\begin{itemize}
+    \item \texttt{GET \textbackslash n}
+    \item \texttt{filename:sciezka do pliku \textbackslash n}
+    \item \texttt{modifytime:data ostatniego uaktualnienia kopii \textbackslash n}
+    \item \texttt{type:typ zapytania \textbackslash n}
+    \item \texttt{id:id zapytania \textbackslash n}
+    \item \texttt{req:oryginalne cialo zapytania \textbackslash n}
+    \item \texttt{\textbackslash n}
+\end{itemize}
+    \item
+\begin{itemize}    
+    \item \texttt{GOAWAY \textbackslash n}
+    \item \texttt{go:adres innego serwera \textbackslash n}
+    \item \texttt{\textbackslash n}
+\end{itemize}
+\end{enumerate}
+Gdzie wszystkie informacje są stringami bez enterów a pole modifytime jest opcjonalne. \\
+Pierwszy odpowiada sytuacji gdy Server prosi Clienta o jakiś plik.\\ 
+Drugi odpowiada sytuacji gdy dany Server jest przeciążony i prosi Hidden Server o przełączenie się na inny Server. (Może być wykorzystywane w momencie gdy jest więcej Serverów).\\
+HS na pierwszy typ zapytania powinien wykonać następujące:
+\begin{enumerate}
+    \item jeśli plik/folder nie istnieje, Hidden Server powinien odpowiedzieć poleceniem postaci:
+    \begin{itemize}   
+        \item \texttt{NOPE \textbackslash n}
+        \item \texttt{id:id zapytania \textbackslash n}
+        \item \texttt{\textbackslash n}
+    \end{itemize}
+    \item porównać daty modyfikacji pliku 
+    \item jeśli data modyfikacji pliku jest wcześniejsza od daty zapisania kopi, Hidden Sever powinien odpowiedzieć poleceniem postaci:
+    \begin{itemize}
+        \item \texttt{OK \textbackslash n}
+        \item \texttt{id:id zapytania \textbackslash n}
+        \item \texttt{\textbackslash n}
+    \end{itemize}
+    \item w przeciwnym przypadku, powinien odpowiedzieć poleceniem postaci:
+    \begin{itemize}
+        \item \texttt{OLD \textbackslash n}
+        \item \texttt{id:id zapytania \textbackslash n}
+        \item \texttt{size:rozmiar pliku \textbackslash n}
+        \item \texttt{filename:sciezka do pliku \textbackslash n}
+        \item \texttt{type:typ(directory/file) \textbackslash n}
+        \item \texttt{modifytime:czas modyfikacji pliku (float)\textbackslash n}
+        \item \texttt{\textbackslash n}
+    \end{itemize}
+    \item po czym otworzyć nowy kanał do komunikacji z Serverem (na porcie 9999), wysłać w nim dane zgodnie z protokołem PF.
+\end{enumerate}
+\section{Protokół PF}
+Protokół PF (\texttt{Push-File}) służy do przesyłania danych z Hidden Servera do Servera. \\
+Hidden Server podłącza się do Servera (na porcie 9999) i wysyła polecenie postaci:
+\begin{itemize}
+        \item \texttt{PUSH \textbackslash n}
+        \item \texttt{id:id zapytania \textbackslash n}
+        \item \texttt{size:rozmiar pliku \textbackslash n}
+        \item \texttt{filename:sciezka do pliku \textbackslash n}
+        \item \texttt{type:typ(directory/file) \textbackslash n}
+        \item \texttt{modifytime:czas modyfikacji pliku (float)\textbackslash n}
+        \item \texttt{\textbackslash n}
+        \item \texttt{cialo pliku}
+    \end{itemize}
+
+\section{Komentarz}
+Tworzenie nowego kanału ma na celu polepszenie wydajności, w przypadku gdy Client C1 chce jakiegoś dużego pliku P1 z Hidden Servera HS1, następnie Client C2 chce jakiegoś małego pliku P2 z tego samo Hidden Servera HS1, chcielibyśmy nie musieć czekać aż cały plik P1 zostanie pobrany, gdyż mogłoby to długo potrwać. Zamiast tego chcielibyśmy równolegle pobrać plik P2. \\
+Przesyłanie id zapytania w odpowiedzi przez Hidden Server ma na celu rozróżnienie zapytań. W przypadku gdy C1 prosi HS1 o plik P1 a C2 prosi HS1 o plik P2 chcielibyśmy uniknąć sytuacji w której P1 wysyłamy do C2 a P2 wysyłamy do C1. \\
+Klient odbierając drugi typ polecenia (\texttt{GOAWAY}), powinien zerwać połączenie z Serverem a następnie nawiązać nowe połączenie z innym Serverem.
+
+
+
+
+   
+\end{document}
