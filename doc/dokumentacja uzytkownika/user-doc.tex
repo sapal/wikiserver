@@ -43,7 +43,11 @@
 \tableofcontents
 \section{Wymagania}
 \begin{itemize}
-\item \texttt{Python} w wersji conajmniej 2.6 (testowane na 2.6, 2.7)
+\item \texttt{Linux} (testowane na \texttt{Ubuntu 10.10} oraz 
+	\texttt{Fedora ??}).
+	Istnieje możliwość uruchomienia HiddenServera również na Windowsie 
+	(testowane na \texttt{Windows XP SP3}).
+\item \texttt{Python} w wersji co najmniej 2.6 (testowane na 2.6, 2.7)
 \item Przeglądarka (testowane na \texttt{Firefox}, \texttt{Chrome})
 \end{itemize}
 
@@ -56,11 +60,11 @@
     \item \texttt{-c cachedir} (nazwa katalogu w którym serwer może cachować pliki, domyślnie cache)
     \item \texttt{-s cachesize} (rozmiar na tymczasowe pliki w KB, domyślnie 100MB)
     \end{itemize}
-\item Należy uruchomić conajmniej raz hiddenserver.py (\texttt{./hiddenserver.py}) który podłączy się do serwera (może być na innym komputerze). Można go uruchomić z następującymi opcjami:
+\item Należy uruchomić co najmniej raz hiddenServer.py (\texttt{./hiddenServer.py}) który podłączy się do serwera (może być na innym komputerze). Można go uruchomić z następującymi opcjami:
     \begin{itemize}
     \item \texttt{-h} (lista opcji)
-    \item \texttt{--host=HOST} (nazwa serwera, domyślnie localhost)
-    \item \texttt{-n name} (nasza nazwa, opcja obowiązkoa)
+    \item \texttt{--host HOST} (nazwa serwera, domyślnie localhost)
+    \item \texttt{-n name} (nasza nazwa, opcja obowiązkowa)
     \item \texttt{-d dir} (ścieżka do katalogu który chcemy udostępniać)
     \end{itemize}
 \item Należy uruchomić przeglądarkę i wpisać jako adres \texttt{adres-hosta:8080} (np. \texttt{localhost:8080}).
