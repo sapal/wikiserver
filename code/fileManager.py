@@ -5,8 +5,8 @@ import os
 import shutil
 import time
 import config
-from logging import basicConfig, debug, DEBUG
-basicConfig(filename='log', level=DEBUG, filemode='w')
+from logging import basicConfig, debug, ERROR
+basicConfig(filename='log', level=ERROR, filemode='w')
 
 class FileInfo :
     '''Klasa odpowiedzialna za dostarczanie informacji o plikach.
@@ -101,7 +101,7 @@ class FileManager :
         self.requestInfo = {} 
         self.fileInfo = {} 
         self.lastRequestId = 0
-        self.requestInfoLock = threading.RLock() 
+        self.requestInfoLock = threading.RLock() # lock blokujący dostęp do requestInfo i fileInfo
         self.idLock = threading.RLock()
 
     def removeCache(self):
