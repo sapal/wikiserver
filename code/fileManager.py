@@ -19,7 +19,7 @@ class FileInfo :
     filename = "" -- Nazwa pliku na Serverze
     fileModified = threading.Condition() -- Condition, na którym robione jest notifyAll, gdy plik "filename" jest modyfikowany
     fileType = "not found" -- Typ pliku. Możliwe są trzy wartości: "not found"/"file"/"directory"
-    usersCount = 0 -- Liczba wątków używających tego pliku (wątki używające pliku są zobowiązane wywołać metody startUsing oraz stopUsing
+    usersCount = 0 -- Liczba wątków używających tego pliku (wątki używające pliku są zobowiązane wywołać metody startUsing oraz stopUsing)
     lastUse = 0 -- Czas ostatniego użycia tego pliku (ustawiane w startUsing)
     useCount = 0 -- Liczba użyć tego pliku (ustawiane w startUsing)
     broken = False -- Czy plik jest popsuty (np. połączenie zostało przerwane podczas jego przesyłania)

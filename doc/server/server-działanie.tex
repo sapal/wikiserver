@@ -44,8 +44,7 @@
 \section{Działanie Servera}
 \begin{figure}
 \includegraphics[width=\linewidth]{DiagramKlas}
-\caption{Diagram klas Servera (nie uwzględniono rzeczy związanych 
-z~synchronizacją wątków)}
+\caption{Diagram klas Servera (nieistotne metody/pola pominięte)}
 \end{figure}
 \subsection{Start Servera}
 Przy starcie \texttt{Server}a uruchamiają się trzy wątki: 
@@ -73,7 +72,7 @@ Odczytywanie pliku/listingu katalogu jest takie samo:
 otwiera się plik \texttt{FileInfo.filename}, czyta się tyle bajtów, ile jest
 dostępnych (\texttt{FileInfo.currentSize}), wysyła użytkownikowi a~następnie 
 czeka na~\texttt{FileInfo.fileModified} aż~więcej bajtów będzie dostępnych. 
-Jak cały plik zostanie wysłany, kończy się proces.
+Jak cały plik zostanie wysłany, kończy się wątek.
 
 \subsection{Zdobywanie pliku przez FileManagera}
 Gdy wywoływana jest metoda \texttt{FileManager.getFileInfo} 
@@ -97,7 +96,7 @@ trzyma kolejkę wysłanych zapytań. Kiedy przyjdzie odpowiedź wywołuje
 Gdy wywoływane jest metoda \texttt{FileManager.processResponse}
 wykonywane są następujące czynności:
 \begin{itemize}
-\item W~przypadku odpowiedzi \texttt{DIRECTORY} lub \texttt{OLD} tworzone jest 
+\item W~przypadku odpowiedzi \texttt{OLD} tworzone jest 
 nowe \texttt{FileInfo}
 \item Odpowiednie \texttt{FileInfo} jest mapowane do~odpowiedniego 
 \texttt{id}.
@@ -111,8 +110,8 @@ wskazywanego przez \texttt{FileManager.fileInfo}.
 \subsection{Zarządzanie cachem}
 Zarządzanie cachem odbywa się za pomocą metody \texttt{FileManager.cleanCache},
 która jest wywoływana przy każdym \texttt{FileManager.processResponse}.
-Każdy obiekt \texttt{FileInfo} trzyma liczbę aktualnie używających go~procesów,
-usunięcie go z~cache'u może nastąpić tylko, gdy żaden proces go~nie używa.
+Każdy obiekt \texttt{FileInfo} trzyma liczbę aktualnie używających go~wątków,
+usunięcie go z~cache'u może nastąpić tylko, gdy żaden wątek go~nie używa.
 
 Pliki są~wybierane do~usunięcia biorąc pod uwagę następujące wielkości:
 \begin{itemize}
@@ -121,11 +120,16 @@ Pliki są~wybierane do~usunięcia biorąc pod uwagę następujące wielkości:
 \item Liczba dostępów do pliku
 \end{itemize}
 
-\subsection{TODO}
-Dla uproszczenia, następujące rzeczy nie zostały tu uwzględnione:
-\begin{itemize}
-\item Metody synchronizacji wątków
-\item Watchdogi (procesy obsługujące połączenia powinny być przerywane
-w~przypadku braku odpowiedzi przez dłuższy czas)
-\end{itemize}
+Przy kończeniu programu cache jest opróżniane.
+
+\subsection{Obsługa błędów}
+W~przypadku wystąpienia błędu z~połączeniem, wątek je~obsługujący jest
+zabijany. Szczególnym przypadkiem jest błąd w~\texttt{PushFileConnection}
+--- wtedy plik jest dodatkowo oznaczany jako popsuty, żeby pozostałe 
+wątki, które go~używają mogły się o~tym dowiedzieć.
+
+\subsection{Synchronizacja wątków}
+Poza opisanymi tu~metodami synchronizacji, w~miejscach, w~których jest 
+to~potrzebne wątki używają \texttt{RLock}ów, żeby zapewnić spójność
+danych.
 \end{document}
