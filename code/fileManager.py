@@ -7,21 +7,34 @@ import time
 import config
 from logging import basicConfig, debug, DEBUG
 basicConfig(filename='log', level=DEBUG, filemode='w')
-#def debug(x):
-#    print(x)
 
 class FileInfo :
-    '''Klasa odpowiedzialna za dostarczanie informacji o plikach'''
+    '''Klasa odpowiedzialna za dostarczanie informacji o plikach.
+    
+    Pola:
+    modifyTime = 0 -- Data ostatniej modyfikacji pliku (na HiddenServerze)
+    size = -1 -- Wielkość pliku (w bajtach). Wartość -1 oznacza, że PushFileConnection jeszcze się nie rozpoczęło i wielkość jest nieznana
+    currentSize = 0 -- Aktualna wielkość pliku (ile się ściągnęło na Server)
+    path = "" -- Bezwzględna ścieżka do pliku (użytkownik/katalog/.../plik)
+    filename = "" -- Nazwa pliku na Serverze
+    fileModified = threading.Condition() -- Condition, na którym robione jest notifyAll, gdy plik "filename" jest modyfikowany
+    fileType = "not found" -- Typ pliku. Możliwe są trzy wartości: "not found"/"file"/"directory"
+    usersCount = 0 -- Liczba wątków używających tego pliku (wątki używające pliku są zobowiązane wywołać metody startUsing oraz stopUsing
+    lastUse = 0 -- Czas ostatniego użycia tego pliku (ustawiane w startUsing)
+    useCount = 0 -- Liczba użyć tego pliku (ustawiane w startUsing)
+    broken = False -- Czy plik jest popsuty (np. połączenie zostało przerwane podczas jego przesyłania)
+    '''
     def __init__(self) :
-        self.modifyTime = 0.0
-        self.size = -1 # to oznacza, że PushFileConnection jeszcze się nie podłączyło
+        """Tworzy FileInfo z domyślnymi wartościami pól."""
+        self.modifyTime = 0.0 
+        self.size = -1 
         self.currentSize = 0
-        self.path = "" # bezwzględna ścieżka do pliku
+        self.path = "" 
         self.filename = ""
         self.fileModified = threading.Condition()
         self.fileType = "not found"
         self.usingLock = threading.RLock() # żeby zdobyć ten lock trzeba już mieć fileManager.requestInfoLock
-        self.usersCount = 0 # liczba procesów używających danego pliku 
+        self.usersCount = 0 
         self.lastUse = 0
         self.useCount = 0
         self.broken = False
@@ -48,7 +61,6 @@ class FileInfo :
         with fileManager.requestInfoLock:
             if (self.path not in fileManager.fileInfo 
                     or self.modifyTime > fileManager.fileInfo[self.path].modifyTime):
-                #print("UPDATE fileInfo({0})".format(self.modifyTime))
                 fileManager.fileInfo[self.path] = self
 
     def sizeChanged(self, newSize):
@@ -61,7 +73,6 @@ class FileInfo :
         """Zaczynam pracę z tym FileInfo,
         proszę go nie usuwać."""
         global fileManager
-        #print("startUsing" + str(self))
         with fileManager.requestInfoLock:
             with self.usingLock:
                 self.usersCount += 1
@@ -72,19 +83,25 @@ class FileInfo :
         """Skończyłem pracę z tym FileInfo,
         już mi nie jest potrzebne."""
         global fileManager
-        #print("stopUsing" + str(self))
         with fileManager.requestInfoLock:
             with self.usingLock:
                 self.usersCount -= 1
 
 class FileManager :
-    '''Klasa zapewniająca dostęp do plików (singleton)'''
+    '''Klasa zapewniająca dostęp do plików (singleton)
+    
+    Pola:
+    hiddenServerConnections = {} -- Słownik: nazwa użytkownika (string) -> HiddenServerConnection przechowujący informacje o połączeniach z HiddenServerami
+    requestInfo = {} Słownik: idZapytania(int) -> FileInfo
+    fileInfo = {} Słownik: ścieżka do pliku (string) -> FileInfo o najpóźniejszym czasie modyfikacji
+    '''
     def __init__(self) :
-        self.hiddenServerConnections = {} # słownik: nazwa użytkownika (string) -> HiddenServerConnection
-        self.requestInfo = {} # słownik: idZapytania(int) -> FileInfo
-        self.fileInfo = {} # słownik: ścieżka do pliku (string) -> FileInfo o najpóźniejszym czasie modyfikacji
+        """Tworzy nowy FileManager. Nie powinno się tworzyć więcej niż jednego FileManagera"""
+        self.hiddenServerConnections = {} 
+        self.requestInfo = {} 
+        self.fileInfo = {} 
         self.lastRequestId = 0
-        self.requestInfoLock = threading.RLock() # lock blokujący dostęp do requestInfo i fileInfo
+        self.requestInfoLock = threading.RLock() 
         self.idLock = threading.RLock()
 
     def removeCache(self):
@@ -118,7 +135,6 @@ class FileManager :
                         if totalSize <= cacheMax:
                             break
                     except BaseException:
-                        #print("ERROR(CACHE):"+str(e))
                         pass
 
     def startUsingFileInfo(self, filename):
@@ -191,10 +207,8 @@ class FileManager :
         info.path = path
         info.filename = filename
         if filename == config.cacheDir + "/users":
-            debug('************************************* ASK FOR USERS') # dorota
             f = open(filename,"w")
             for user in self.hiddenServerConnections.keys():
-                debug('there is' + user)                                 # dorota
                 f.write(user+"\n")
             f.close()
             info.filename = filename
@@ -204,7 +218,6 @@ class FileManager :
             with self.requestInfoLock:
                 self.requestInfo[id] = info
                 info.startUsing()
-            debug('********************************************* END')   # dorota
         elif self.getUser(path) == 'favicon.ico':
             cachedFilename =  config.cacheDir + os.sep + 'favicon.ico'
             dataFilename = config.dataDir + os.sep + 'favicon.ico'
@@ -237,7 +250,7 @@ class FileManager :
                 debug("getFileInfo({0}), request completed".format(filename))
                 with self.requestInfoLock:
                     info = self.requestInfo[id]
-                #Wait for PushFileConnection to establish:
+                #Czekaj, aż zacznie się PushFileConnection:
                 while info.size == -1:
                     with info.fileModified:
                         if info.size == -1:

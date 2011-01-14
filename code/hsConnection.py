@@ -1,22 +1,25 @@
 # coding=utf-8
 
 from fileManager import fileManager
-#import fileManager as fm
 import threading
 import asynchat, asyncore
 import socket
 from Queue import Queue
 from helper import parseData
 import base64
-from logging import basicConfig, debug, DEBUG
-#basicConfig(filename='hsConnection.log', level=DEBUG, filemode='w')
-#def debug(x):
-#    print(x)
+from logging import debug
 
-class HiddenServerConnection(asynchat.async_chat):
-    '''Klasa reprezentująca trwałe połączenie HiddenServera z Serverem'''
-    responses = ["OK", "OLD", "MYNAMEIS"]
+class HiddenServerConnection(asynchat.async_chat, object):
+    '''Klasa reprezentująca trwałe połączenie HiddenServera z Serverem
+    
+    Pola:
+    requestQueue = Queue() -- Kolejka zapytań do wysłania HiddenServerowi
+    user = "" -- Nazwa użytkownika
+    '''
+    responses = ["OK", "OLD", "MYNAMEIS", "NOPE"]
     def __init__(self, sock, map=None):
+        """Tworzy nowe HiddenServerConnection słuchające na gniazdku sock
+        i dodane do mapy asyncore map (None oznacza domyślną mapę)."""
         self.buffer = ""
         asynchat.async_chat.__init__(self, sock, map=map)
         self.requestQueue = Queue()
@@ -51,27 +54,21 @@ class HiddenServerConnection(asynchat.async_chat):
             debug("REQUEST SENT")
 
     def collect_incoming_data(self, data):
-        #debug("INCOMING DATA: "+data)
+        """Nadpisuje odpowiednią metodę w asynchat.async_chat."""
         self.data.append(data)
 
     def processResponse(self):
         """Funkcja przetwarzająca odpowiedź od HiddenServera."""
-        #debug('processRespone')
         global fileManager
         r = self.response
         self.response = {}
-        #debug(str(r))
-        #debug('to byl debug')
         if r['response'] == "MYNAMEIS":
-            #debug('mynameis')
             self.user = r['username'].strip()
             fileManager.hiddenServerConnections[self.user] = self
             self.push('Hello ' + self.user + ' i am your master\n\n')
             print("SW: User '{0}' connected.".format(self.user))
-            #debug('Got him!')
             return
         else:
-            #debug('else czyli nie mynameis')
             with self.stopLock:
                 request, info = self.sentRequests.get()
                 fileManager.processResponse(request['id'], r, info)
@@ -79,19 +76,20 @@ class HiddenServerConnection(asynchat.async_chat):
                 with c:
                     c.notify()
                 info.stopUsing()
-        #debug('endof')    
 
     def handle_error(self):
+        """Nadpisuje odpowiednią metodę w asynchat.async_chat."""
         debug("HSC:ERROR")
-        #self.handle_close()
 
     def found_terminator(self):
+        """Nadpisuje odpowiednią metodę w asynchat.async_chat."""
         data = "".join(self.data)
         self.data = []
         self.response = parseData(data)
-        self.processResponse()   # dorota 
+        self.processResponse()   
 
     def handle_close(self):
+        """Nadpisuje odpowiednią metodę w asynchat.async_chat."""
         with self.stopLock:
             debug("Close")
             self.close()
@@ -102,10 +100,14 @@ class HiddenServerConnection(asynchat.async_chat):
                 del fileManager.hiddenServerConnections[self.user]
 
 
-class HSServer(asyncore.dispatcher):
+class HSServer(asyncore.dispatcher, object):
     '''Klasa odpowiedzialna za tworzenie HiddenServerConnectionów'''
 
     def __init__(self, port, reuseAddress=False, map=None):
+        """Tworzy nowy HSServer słuchający na porcie port
+        i dodane do mapy asyncore map (None oznacza domyślną mapę).
+        Opcja reuseAddres mówi, czy SO_REUSEADDR powinno być ustawione,
+        czy nie."""
         asyncore.dispatcher.__init__(self, None, map)
         self.map = map
         self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -115,6 +117,7 @@ class HSServer(asyncore.dispatcher):
         self.listen(5)
 
     def handle_accept(self):
+        """Nadpisuje odpowiednią metodę w asyncore.dispatcher."""
         p = self.accept()
         if not p:
             return
@@ -122,17 +125,20 @@ class HSServer(asyncore.dispatcher):
         HiddenServerConnection(conn, self.map)
         
 def startHSServer():
+    """Uruchamia HSServer na domyślnym porcie (8888)."""
     m = {}
-    HSServer(8888, reuseAddress=True, map=m) # Nie jestem pewien, czy w końcowym kodzie powinno być reuseAddress, ale do debugowania się nada
+    HSServer(8888, reuseAddress=True, map=m) 
     print("Starting HSServer.")
     asyncore.loop(map=m)
 
 class PushFileConnection(asynchat.async_chat, object):
     '''Klasa reprezentująca połączenie przesyłające plik z HiddenServera do Servera.
-Zapisuje dane do odpowiedniego pliku i przy każdym zapisie wywołuje sizeChanged()'''
+    Zapisuje dane do odpowiedniego pliku i przy każdym zapisie wywołuje sizeChanged().
+    '''
     ac_in_buffer_size = 32*1024
     def __init__(self, sock, map=None):
-        asynchat.async_chat.__init__(self, sock=sock, map=map)
+        """Tworzy nowe PushFileConnection na gniazdku sock
+        i dodane do mapy asyncore map (None oznacza domyślną mapę)."""
         self.BUFFER_SIZE = 16*1024
         self.set_terminator("\n\n")
         self.data = []
@@ -143,9 +149,11 @@ Zapisuje dane do odpowiedniego pliku i przy każdym zapisie wywołuje sizeChange
         self.fileInfo = None
 
     def collect_incoming_data(self, data):
+        """Nadpisuje odpowiednią metodę w asynchat.async_chat."""
         self.data.append(data)
 
     def handle_error(self):
+        """Nadpisuje odpowiednią metodę w asynchat.async_chat."""
         import traceback
         debug(traceback.format_exc())
 
@@ -160,29 +168,27 @@ Zapisuje dane do odpowiedniego pliku i przy każdym zapisie wywołuje sizeChange
         except BaseException as e:
             print(e)
             print(str(self.header))
-        #debug(str(self.header))
 
     @property
     def length(self):
+        """Wielkość aktualnie ściąganego pliku."""
         return self.header['size']
 
     def found_terminator(self):
+        """Nadpisuje odpowiednią metodę w asynchat.async_chat."""
         global fileManager
         data = "".join(self.data)
         self.data = []
         if self.reciveData:
             self.recived += len(data)
-            #debug("TERMINATOR: " +str(self.recived))
             self.file.write(data)
             self.file.flush()
             self.fileInfo.sizeChanged(self.recived)
             if self.length == self.recived:
                 debug("OK")
-                #self.handle_close()
                 return
             term = min(self.BUFFER_SIZE,self.length - self.recived)
             self.set_terminator(term)
-            #debug("New terminator: " +str(term) + str((self.recived, self.length)))
             return
         self.header = parseData(data)
         self.formatHeader()
@@ -198,15 +204,20 @@ Zapisuje dane do odpowiedniego pliku i przy każdym zapisie wywołuje sizeChange
         print("PUSH FILE: '{file}' (size:{size})".format(file=self.fileInfo.path, size=self.fileInfo.size))
 
     def handle_close(self):
+        """Nadpisuje odpowiednią metodę w asynchat.async_chat."""
         debug("PFC:Close")
         if self.fileInfo.currentSize < self.fileInfo.size:
             self.fileInfo.setBroken()
         self.close()
         
-class PushFileServer(asyncore.dispatcher):
+class PushFileServer(asyncore.dispatcher, object):
     '''Klasa odpowiedzialna za tworzenie PushFileConnectionów'''
 
     def __init__(self, port, reuseAddress=True, map=None):
+        """Tworzy nowy PushFileServer słuchający na porcie port
+        i dodane do mapy asyncore map (None oznacza domyślną mapę).
+        Opcja reuseAddres mówi, czy SO_REUSEADDR powinno być ustawione,
+        czy nie."""
         asyncore.dispatcher.__init__(self, map=map)
         self.map = map
         self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -216,6 +227,7 @@ class PushFileServer(asyncore.dispatcher):
         self.listen(5)
 
     def handle_accept(self):
+        """Nadpisuje odpowiednią metodę w asyncore.dispatcher."""
         p = self.accept()
         if not p:
             return
@@ -223,7 +235,8 @@ class PushFileServer(asyncore.dispatcher):
         PushFileConnection(conn, map=self.map)
         
 def startPushFileServer():
+    """Uruchamia PushFileServer na domyślnym porcie (9999)."""
     print("Starting PushFileServer")
     m = {}
-    PushFileServer(9999, reuseAddress=True, map=m) # Nie jestem pewien, czy w końcowym kodzie powinno być reuseAddress, ale do debugowania się nada
+    PushFileServer(9999, reuseAddress=True, map=m) 
     asyncore.loop(map=m)

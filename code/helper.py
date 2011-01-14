@@ -18,5 +18,6 @@ def parseData(data):
    
 
 def formatDate(timestamp):
+    """Formatuje datę tak, jak każe HTTP (zwraca string)."""
     return format_date_time(timestamp)
 
