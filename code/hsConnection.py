@@ -65,7 +65,6 @@ class HiddenServerConnection(asynchat.async_chat, object):
         if r['response'] == "MYNAMEIS":
             self.user = r['username'].strip()
             fileManager.hiddenServerConnections[self.user] = self
-            self.push('Hello ' + self.user + ' i am your master\n\n')
             print("SW: User '{0}' connected.".format(self.user))
             return
         else:
