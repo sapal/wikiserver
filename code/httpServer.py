@@ -8,19 +8,20 @@ from logging import debug
 from helper import formatDate
 import config
 
-class HttpRequest(BaseHTTPRequestHandler):
+class HttpRequest(BaseHTTPRequestHandler, object):
     '''Klasa odpowiedzialna za obsługę HTTP'''
     def handle_error(self):
+        """Nadpisuje odpowiednią metodę w BaseHTTPRequestHandler."""
         print("HTTP:ERROR")
 
     def do_POST(self):
-        """Obsługa POST"""
+        """Nadpisuje odpowiednią metodę w BaseHTTPRequestHandler."""
         self.answerGET()
     def do_GET(self):
-        """Obsługa GET"""
+        """Nadpisuje odpowiednią metodę w BaseHTTPRequestHandler."""
         self.answerGET()
     def do_HEAD(self):
-        """Obsługa HEAD"""
+        """Nadpisuje odpowiednią metodę w BaseHTTPRequestHandler."""
         self.answerGET(headerOnly=True)
     def answerGET(self, headerOnly=False):
         """Wyślij odpowiedni nagłówek i plik.
@@ -32,14 +33,10 @@ class HttpRequest(BaseHTTPRequestHandler):
                         self.path,
                         self.request_version,
                         str(self.headers)]))
-            #print("HTTP:info:{0}/{1}".format(info.filename, info.fileType))
-            #print(self.headers)
             if info.fileType == "not found":
                 raise IOError()
             if 'If-Modified-Since' in self.headers: 
-                #print(self.headers['If-Modified-Since'], formatDate(info.modifyTime))
                 if self.headers['If-Modified-Since'] == formatDate(info.modifyTime):
-                    #print("304 "*10)
                     self.send_response(304)
                     return
             begin = 0
@@ -49,7 +46,6 @@ class HttpRequest(BaseHTTPRequestHandler):
                 if "range" in self.headers:
                     begin,end = map(int,self.headers["range"].partition('=')[2].split('-'))
                     partial = True
-                    #print("LOL:{0} {1}".format(begin,end))
             except:
                 pass
             if partial:
@@ -95,11 +91,8 @@ class HttpRequest(BaseHTTPRequestHandler):
                     written += len(chunk)
                     if len(part) > 0:
                         self.wfile.write(part)
-                    #print("WRITTEN: {0} [{1}:{2}]".format(written, pbegin,pend))
                     if written > end:
                         break
-                    #debug("HTTP: "+str(written))
-                    #debug(chunk)
             elif info.fileType == "directory":
                 self.wfile.write(listing)
         except IOError :
@@ -115,8 +108,6 @@ class HttpRequest(BaseHTTPRequestHandler):
             import traceback
             debug(traceback.format_exc())
         finally:
-            #self.wfile.flush()
-            #self.wfile.close()
             info.stopUsing()
 
     def getDirectoryListing(self, path, fileInfo):
@@ -146,14 +137,18 @@ class HttpRequest(BaseHTTPRequestHandler):
         return "".join(res)
 
     def log_message(self, format, *args):
+        """Nadpisuje odpowiednią metodę w BaseHTTPRequestHandler."""
         print("HTTP: "+ (format%args)+ " {0}:{1}".format(*(self.client_address)))
 
 class HttpServer(ThreadingMixIn, HTTPServer):
     '''Klasa odpowiedzialna za tworzenie HttpRequestów'''
     def __init__(self, interface='', port=config.httpPort, handler=HttpRequest) :
+        """Tworzy HttpServer na interfejsie interface ('' oznacza wszystkie interfejsy),
+        porcie port z HTTPRequestHandlerem handler."""
         HTTPServer.__init__(self,(interface,port),handler)
 
 def start():
+    """Uruchom HttpServer na porcie config.httpPort."""
     server = HttpServer(port=config.httpPort)
     print("Starting HttpServer.")
     server.serve_forever()
