@@ -139,6 +139,7 @@ class PushFileConnection(asynchat.async_chat, object):
     def __init__(self, sock, map=None):
         """Tworzy nowe PushFileConnection na gniazdku sock
         i dodane do mapy asyncore map (None oznacza domyślną mapę)."""
+        asynchat.async_chat.__init__(self, sock=sock, map=map)
         self.BUFFER_SIZE = 16*1024
         self.set_terminator("\n\n")
         self.data = []
