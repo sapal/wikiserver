@@ -12,8 +12,9 @@ from optparse import OptionParser
 def done_fun():
     print 'byebye'
 
-
 class HiddenServer(asynchat.async_chat):
+    """ Klasa odpowiedzialna za trwałe połączenie z Serverem - na porcie 8888.
+    """
     def __init__(self, host, path, myname):
         self.buffer = ""
         asynchat.async_chat.__init__(self)
@@ -29,23 +30,37 @@ class HiddenServer(asynchat.async_chat):
         # print 'MYNAMEIS:' + self.myname + '\r\n'
         self.data = []
         self.set_terminator('\n\n')
-    def collect_incoming_data(self, data):
+    def collect_incoming_data(self, data):        
+        """ Nadpisuje odpowiednią metodę w asyncore.dispatcher.
+        """
         self.data.append(data)
     def handle_connect(self):
+        """ Nadpisuje odpowiednią metodę w asyncore.dispatcher.
+        """
         pass
     def handle_close(self):
+        """ Nadpisuje odpowiednią metodę w asyncore.dispatcher.
+        """
         done_fun()
         self.close()
     def writable(self):
+        """ Nadpisuje odpowiednią metodę w asyncore.dispatcher.
+        """
         return (len(self.buffer) > 0)
     def handle_write(self):
+        """ Nadpisuje odpowiednią metodę w asyncore.dispatcher.
+        """
         sent = self.send(self.buffer)
         print "\tSending info."
         # print("HS: sent:"+str(self.buffer[:sent]))
         self.buffer = self.buffer[sent:]
     def found_terminator(self):
+        """ Nadpisuje odpowiednią metodę w asyncore.dispatcher.
+        """
         self.processRequest()
     def processRequest(self):
+        """ Nadpisuje odpowiednią metodę w asyncore.dispatcher.
+        """
         request = "".join(self.data)
         self.data = []
         self.req = parseData(request)
@@ -53,6 +68,8 @@ class HiddenServer(asynchat.async_chat):
         if(self.req['response'] == 'GET'):
             self.answerToGet()
     def answerToGet(self):
+        """ Funkcja odpowiada na zapytanie typu GET.        
+        """
         filename = self.req['filename']
         if(filename[0] == '/'):
             filename = filename[1:]
@@ -78,10 +95,16 @@ class HiddenServer(asynchat.async_chat):
             return
 
     def answerToNope(self):
+        """ Funkcja wysyła informację, że poszukiwany dokument nie istnieje (do Servera).
+        """
         self.buffer += 'NOPE\nid:' + self.req['id'] + '\n\n'
     def answerToLsMain(self):
+        """ Funkcja wysyła listę zawartości głównego katalogu (do Servera). 
+        """
         self.answerToDir('.')
     def answerToFile(self, filename, fakeFilename, typ):
+        """ Funkcja wysyła plik (do Servera).
+        """
         if(typ == 'file'):
             print '\tIt is a file.'
         else:
@@ -98,10 +121,11 @@ class HiddenServer(asynchat.async_chat):
         self.buffer += 'modifytime:{0}\n\n'.format(os.path.getmtime(filename))
         newThreadPushFile(self.host, filename, fakeFilename, typ, self.req['id'])
     def answerToDir(self, filename):
+        """ Funkcja wysyła listę zawartości danego katalogu (do Servera).
+        """
         f,tmpfile = mkstemp()
         os.close(f)
         f = open(tmpfile, 'w')
-        print "debug - tmpfile is : " + tmpfile
         for line in os.listdir(unicode(filename)):
             f.write(line.encode("utf-8") + "\n")
         f.close()                
@@ -109,6 +133,8 @@ class HiddenServer(asynchat.async_chat):
         # usuwane w PushFileConnection - po przeslaniu
 
 class PushFileConnectionClient(socket.socket):
+    """ Klasa odpowiedzialna za chwilowe połaczenie z Serverem - na porcie 9999. Służy do wysłania pojedynczego pliku.
+    """
     def __init__(self, host, filename, fakeFilename, typ, id):
         socket.socket.__init__(self, socket.AF_INET, socket.SOCK_STREAM)
         #print 'hello init'
@@ -120,12 +146,16 @@ class PushFileConnectionClient(socket.socket):
         self.typ = typ
 
     def sendBuffer(self):
+        """ Funkcja wysyła dane z buffera (do Servera).
+        """
         while len(self.buffer)>0:
             sent = self.send(self.buffer)
             self.buffer = self.buffer[sent:]
             # print(sent)
 
     def sendFile(self):
+        """ Funkcja wysyła plik (do buffera) - zgodnie z protokołem PF.
+        """
         self.buffer += 'PUSH\n'
         self.buffer += 'id:'+self.id+'\n'
         self.buffer += 'size:' + str(os.path.getsize(self.filename)) + '\n'
@@ -145,8 +175,10 @@ class PushFileConnectionClient(socket.socket):
         if(self.typ == 'directory'):
             os.remove(self.filename)
         print("\tFile sent.")
-        
+
 def newThreadPushFile(host, filename, fakeFilename, typ, id):
+    """ Metoda uruchamiajająca w nowym wątku wysyłanie pliku (do Servera).
+    """
     pfc = PushFileConnectionClient(host, filename, fakeFilename, typ, id)
 
     pfcThread = threading.Thread(target=pfc.sendFile)

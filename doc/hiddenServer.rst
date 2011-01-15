@@ -1,10 +1,9 @@
 Hidden Server
 =============
 
-Jakis tekst
+Moduł zawierający potrzebne klasy i funkcję do działania WikiServera od strony użytkownika.
 
 .. automodule:: hiddenServer
 	:members:
-    :undoc-members:
 
-Albo undoc-members    
+
