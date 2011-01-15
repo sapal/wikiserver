@@ -4,4 +4,4 @@ Config
 .. automodule:: config
 	:members:
 
-Albo undoc-members    
+TODO albo usunąć z index.rst
