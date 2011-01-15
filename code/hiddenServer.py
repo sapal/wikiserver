@@ -9,8 +9,8 @@ import threading
 from tempfile import mkstemp
 from optparse import OptionParser
 
-def done_fun():
-    print 'byebye'
+def done_fun(name):
+    print 'Goodbye ' + name + "!"
 
 class HiddenServer(asynchat.async_chat):
     """ Klasa odpowiedzialna za trwałe połączenie z Serverem - na porcie 8888.
@@ -41,7 +41,7 @@ class HiddenServer(asynchat.async_chat):
     def handle_close(self):
         """ Nadpisuje odpowiednią metodę w asyncore.dispatcher.
         """
-        done_fun()
+        done_fun(self.myname)
         self.close()
     def writable(self):
         """ Nadpisuje odpowiednią metodę w asyncore.dispatcher.
