@@ -132,4 +132,24 @@ wątki, które go~używają mogły się o~tym dowiedzieć.
 Poza opisanymi tu~metodami synchronizacji, w~miejscach, w~których jest 
 to~potrzebne wątki używają \texttt{RLock}ów, żeby zapewnić spójność
 danych.
+
+\section{Działanie Klienta (Hidden Servera)}
+\subsection{Start Klienta}
+Klienta podłącza się do Hidden Servera i rejestruje się poprzez \texttt{MYNAMEIS}.
+\subsection{Obsługa zapytań}
+Jeśli klient dostaje zapytanie typu \texttt{GET} obsługuje je w następujący sposób.
+\begin{itemize}
+\item Sprawdza czy plik/folder o zadanej ścieżce istnieje (jeśli nie to wysyła odpowiedź \texttt{NOPE}).
+\item Sprawdza czy zapytanie jest o plik, jeśli tak:
+    \begin{itemize}
+    \item Porównuje datę ostatniej modyfikacji, otrzymaną w zapytaniu. Jeśli plik jest aktualny to wysyła odpowiedź \texttt{OK}.
+    \item W przeciwny przypadku wysyła odpowiedź \texttt{OLD}. Po czym tworzony jest osobny wątek \texttt{newThreadPushFile} który łączy się z Serverem i wysyła odpowiedni plik.
+    \end{itemize}
+\item Sprawdza czy zapytanie jest o katalog, jeśli tak:
+    \begin{itemize}
+    \item Tworzy tymczasowy plik w katalogu \texttt{/tmp/}, do którego zapisuje wynik wylistowania katalogu.
+    \item Wysyła odpowiedź \texttt{OLD}. Po czym tworzony jest osobny wątek \texttt{newThreadPushFile} który łączy się z Serverem i wysyła odpowiedni plik.
+    \end{itemize}
+\end{itemize}
+
 \end{document}
