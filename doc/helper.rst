@@ -12,4 +12,7 @@ Przykładowo::
     >>> parseData(txt)
     {'response': 'MYNAMEIS', 'username': 'name'}
 
+    >>> helper.formatDate(1295360000)
+    'Tue, 18 Jan 2011 14:13:20 GMT'
+    
 .. 

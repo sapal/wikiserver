@@ -13,11 +13,9 @@ Contents:
 
    helper
    hiddenServer
-   server
    httpServer
    fileManager
    hsConnection
-   config
 
 Indices and tables
 ==================
