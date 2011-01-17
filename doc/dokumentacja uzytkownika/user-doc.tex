@@ -1,0 +1,76 @@
+\documentclass[a4paper,notitlepage]{article}
+\usepackage[a4paper, top=2.5cm, bottom=2.5cm, left=2cm, right=2cm]{geometry}
+
+\usepackage{listings}
+\usepackage[utf8]{inputenc}
+\usepackage{polski}
+\usepackage{amsmath}
+\usepackage{alltt}
+\usepackage{graphicx}
+\usepackage{fancyhdr}
+\usepackage[
+	bookmarks, 
+	colorlinks=true, 
+	pdftitle={WikiServer - Dokumentacja Użytkownika}, 
+	pdfauthor={Dorota Wąs, Michał Sapalski}, 
+]{hyperref}
+\newlength{\lword}
+\newcommand{\define}[3]{
+\begin{samepage}
+{\settowidth{\lword}{
+\textbf{\large #1} = }\vspace{0.2cm}\par\noindent\hangindent=\lword
+\textbf{\large #1} = \emph{#2} #3\vspace{0.2cm}\par}
+\end{samepage}
+}
+\lstset{
+    language=c++,
+    commentstyle=\itshape,
+    numbers=left,
+    numbersep=5pt,
+    frame=single,
+    tabsize=2,
+    breaklines=true,
+    breakatwhitespace=true,
+    inputencoding=utf8,
+    extendedchars=true,
+	texcl=true,
+	mathescape=true
+}
+\begin{document}
+\pagestyle{fancy}
+\lhead{Dokumentacja Użytkownika --- \textsc{WikiServer}}
+\rhead{Dorota Wąs, Michał Sapalski}
+\tableofcontents
+\section{Wymagania}
+\begin{itemize}
+\item \texttt{Linux} (testowane na \texttt{Ubuntu 10.10} oraz 
+	\texttt{Fedora 10 (Cambridge)}).
+	Istnieje możliwość uruchomienia HiddenServera również na Windowsie 
+	(testowane na \texttt{Windows XP SP3}).
+\item \texttt{Python} w wersji co najmniej 2.6 (testowane na 2.6, 2.7)
+\item Przeglądarka (testowane na \texttt{Firefox}, \texttt{Chrome})
+\end{itemize}
+
+\section{Użytkowanie}
+\begin{enumerate}
+\item Należy uruchomić server.py (\texttt{./server.py}) który będzie serwował pliki. Można go uruchomić z następującymi opcjami:
+    \begin{itemize}
+    \item \texttt{-h} (lista opcji)
+    \item \texttt{-p port} (port dla serwera http, domyślnie 8080)
+    \item \texttt{-c cachedir} (nazwa katalogu w którym serwer może cachować pliki, domyślnie cache)
+    \item \texttt{-s cachesize} (rozmiar na tymczasowe pliki w KB, domyślnie 100MB)
+    \end{itemize}
+\item Należy uruchomić co najmniej raz hiddenServer.py (\texttt{./hiddenServer.py}) który podłączy się do serwera (może być na innym komputerze). Można go uruchomić z następującymi opcjami:
+    \begin{itemize}
+    \item \texttt{-h} (lista opcji)
+    \item \texttt{--host HOST} (nazwa serwera, domyślnie localhost)
+    \item \texttt{-n name} (nasza nazwa, opcja obowiązkowa)
+    \item \texttt{-d dir} (ścieżka do katalogu który chcemy udostępniać)
+    \end{itemize}
+\item Należy uruchomić przeglądarkę i wpisać jako adres \texttt{adres-hosta:8080} (np. \texttt{localhost:8080}).
+\item Możemy już przeglądać użytkowników i pliki przez nich udostępniane.
+\end{enumerate}
+
+
+   
+\end{document}
