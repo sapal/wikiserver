@@ -1,0 +1,250 @@
+\documentclass[a4paper,notitlepage]{article}
+\usepackage[a4paper, top=3.5cm, bottom=3.5cm]{geometry}
+
+\usepackage{listings}
+\usepackage[utf8]{inputenc}
+\usepackage{polski}
+\usepackage{amsmath}
+\usepackage{alltt}
+\usepackage{graphicx}
+%\usepackage{tikz}
+\usepackage{fancyhdr}
+%\usetikzlibrary{arrows,snakes,automata,shapes.geometric,shapes.symbols,shapes.callouts,calc}
+%\usepackage{tkz-2d}
+\usepackage[
+	bookmarks, 
+	colorlinks=true, 
+	pdftitle={Analiza bezpieczeństwa Wikiservera}, 
+	pdfauthor={Dorota Wąs, Michał Sapalski}, 
+]{hyperref}
+\newlength{\lword}
+\newcommand{\define}[3]{
+\begin{samepage}
+{\settowidth{\lword}{\textbf{\large #1} = }\vspace{0.2cm}\par\noindent\hangindent=\lword
+\textbf{\large #1} = \emph{#2} #3\vspace{0.2cm}\par}
+\end{samepage}
+}
+\lstset{
+    language=c++,
+    commentstyle=\itshape,
+    numbers=left,
+    numbersep=5pt,
+    frame=single,
+    tabsize=2,
+    breaklines=true,
+    breakatwhitespace=true,
+    inputencoding=utf8,
+    extendedchars=true,
+	texcl=true,
+	mathescape=true
+}
+\begin{document}
+\pagestyle{fancy}
+\lhead{\textsc{Wikiserver} --- analiza bezpieczeństwa}
+\rhead{Dorota Wąs, Michał Sapalski}
+
+\section{Konwencja w~przykładach ataków}
+W~podanych dalej przykładach będziemy przyjmować następującą konwencję:
+\begin{itemize}
+\item Server działa pod adresem \texttt{http://hogwart/} 
+z~limitem wielkości cache równym 100MB,
+\item Harry ma uruchomiony HiddenServer o nazwie \texttt{harry} 
+zarejestrowany na Serverze \texttt{hogwart},
+serwujący pliki z~katalogu \texttt{/home/harry/public/},
+\item Ron przegląda pliki z~\texttt{http://hogwart/harry},
+\item Voldemort chce w~jakiś sposób naruszyć bezpieczeństwo systemu.
+\end{itemize}
+
+\section{Zagrożenia poufności --- bieżąca implementacja}
+Wikiserver został napisany z~założeniem, że każdy użytkownik (Client) może
+wyświetlać pliki dowolnego HiddenServera. Ponadto Server jest uważany 
+za zaufany. Wiadomo, że często te założenia nie będą spełnione, co
+może prowadzić do zagrożenia bezpieczeństwa w~rozmaitych obszarach.
+Warto także zauważyć, że nawet gdy te założenia są spełnione, to nadal
+jest wiele sposobów przeprowadzenia ataku. 
+
+\subsection{Dostęp do nieudostępnionych plików na HiddenServerze}
+\subsubsection*{Opis zagrożenia}
+Atakujący może dostać się do praktycznie dowolnego pliku na HiddenServerze,
+nie tylko do udostępnionych plików.
+\subsubsection*{Przykładowy atak}
+\begin{itemize}
+\item Voldemort wykonuje zapytanie 
+\texttt{http://hogwart/harry/../secret\_file}
+\item Server przekazuje do Harry'ego zapytanie o~\texttt{../secret\_file}
+\item Harry odpowiada na zapytanie zwracając plik 
+\texttt{/home/harry/secret\_file}, który nie był udostępniony
+\end{itemize}
+
+\subsubsection*{Sposoby zabezpieczenia}
+HiddenServer powinien sprawdzać, czy plik jest udostępniony zanim
+zwróci go w~odpowiedzi na zapytanie.
+
+\subsection{Przepełnienie pamięci cache}
+\label{przepelnienieCacheu}
+\subsubsection*{Opis zagrożenia}
+Jest możliwe, że nastąpi przepełnienie pamięci cache na Serverze (czyli,
+że folder \texttt{cache} będzie zajmował więcej miejsca niż określa to 
+konfiguracja).
+\subsubsection*{Przykładowy atak}
+\begin{itemize}
+\item Voldemort rejestruje się na Serverze \texttt{hogwart} pod nazwą
+\texttt{voldemort} udostępniając pliki z~katalogu \texttt{/home/voldemort/evil}
+\item Voldemort umieszcza duży plik \texttt{big\_file} (np. 1GB) 
+w~katalogu \texttt{/home/voldemort/evil}
+\item Voldemort wykonuje zapytanie \texttt{http://hogwart/voldemort/big\_file}
+\item Server próbuje cache'ować plik \texttt{big\_file}, co powoduje że
+użycie dysku wzrasta do 1GB.
+\end{itemize}
+
+\subsubsection*{Sposoby zabezpieczania}
+Server nie powinien próbować cache'ować plików większych niż maksymalny
+rozmiar cache'u. Warto zauważyć, że Server powinien wymuszać, że 
+HiddenServer poda poprawną wielkość pliku poprzez zakończenie połączenia
+gdy liczba przesłanych bajtów przekroczy podaną przez HiddenServer wielkość.
+
+\subsection{Podmiana Servera / podsłuchiwanie połączenia}
+\label{podmianaServera}
+\subsubsection*{Opis zagrożenia}
+Jednym z~założeń jest, że Server jest uważany za zaufany. Jest to istotne,
+gdyż ma on dostęp do informacji o~tym kto ściągał
+jakie pliki oraz z~którego HiddenServera. Poprzez podmianę Servera lub
+podsłuchiwanie połączeń atakujący może przejąć te informacje.
+\subsubsection*{Przykładowy atak}
+\begin{itemize}
+\item Voldemort przechwytuje pakiety do Servera i~zapamiętuje
+jaki użytkownik ściąga jaki plik.
+\end{itemize}
+\subsubsection*{Sposoby zabezpieczania}
+Zarówno połączenie między Serverem a~HiddenServerem jak i~Clientem
+a~Serverem powinno być szyfrowane. Trzeba również zaimplementować
+autentykację Servera --- na przykład za pomocą szyfrowania z~kluczem
+publicznym (zakładamy, że HiddenServer i~Client mają dostęp
+do klucza publicznego Servera).
+
+\section{Zagrożenia poufności --- implementacja Wikiservera z~kontrolą 
+dostępu do plików}
+Gdy przyjmiemy założenie, że niektóre pliki powinny być dostępne jedynie
+dla wybranych Clientów, oraz że Server może być przejęty przez atakującego,
+to musimy poradzić sobie z~dodatkowymi problemami dotyczącymi poufności.
+
+\subsection{Maskowanie ściąganych plików}
+\subsubsection*{Bieżąca implementacja}
+W obecnej implementacji Server ma wszystkie informacje o~tym kto ściągał
+jakie pliki oraz z~którego HiddenServera. 
+\subsubsection*{Proponowane rozwiązanie}
+Możliwe są dwa rozwiązania:
+\begin{itemize}
+\item Połączenie Client -- HiddenServer jest szyfrowane. Server ma 
+informacje, że Client łączył się z~HiddenServerem, ale nie wie
+jaki plik ściągał.
+\item Przy ściąganiu Client prosi o~kilka plików na~raz, ale wykorzystując
+szyfrowanie z~kluczem publicznym zapewniamy, że jest w~stanie odczytać
+tylko jeden z~nich. Server nie ma pewnej informacji, że Client ściągnął
+jakiś plik, ani że w~ogóle otrzymał jakieś informacje od konkretnego 
+HiddenServera.
+\end{itemize}
+\subsubsection*{Wady}
+Zarówno w~jednym, jak i w~drugim rozwiązaniu cache'owanie plików przez
+Server jest niemożliwe.
+
+
+\subsection{Ograniczanie dostępu do plików}
+\subsubsection*{Bieżąca implementacja}
+W obecnej implementacji wszystkie pliki udostępniane przez HiddenServer 
+są publiczne. Zmniejsza to funkcjonalność Wikiservera, gdyż uniemożliwia
+dzielenie się plikami, do których nie każdy powinien mieć dostęp.
+
+\subsubsection*{Proponowane rozwiązanie}
+Możliwe są dwa rozwiązania:
+\begin{itemize}
+\item Client wysyła informacje uwierzytelniające do Servera, który sprawdza
+czy ma on dostęp do konkretnego pliku.
+\item Client wysyła informacje uwierzytelniające do HiddenServera 
+(za pośrednictwem Servera). Sprawdzanie uprawnień odbywa się na HiddenServerze.
+\end{itemize}
+\subsubsection*{Uwagi}
+Drugie rozwiązanie jest lepsze, ze względu na to, że uprawnienia 
+nie muszą być znane Serverowi. Warto jednak zauważyć, że w~prostej
+implementacji drugiego rozwiązania jest pewien problem, który nie występuje
+w~rozwiązaniu pierwszym: atakujący jest w~stanie rozróżnić, czy HiddenServer
+jest niepodłączony do Servera, czy tylko nie ma do niego dostępu --- 
+w~drugim przypadku czas odpowiedzi Servera jest dłuższy, gdyż musi
+się komunikować z~HiddenServerem.
+
+Warto również zaznaczyć, że konieczna jest autentykacja HiddenServerów 
+(opisane w~(\ref{podmianaHiddenServera})). W~przypadku gdy jej nie ma, 
+jest możliwy następujący atak:
+\begin{itemize}
+\item Harry nie jest podłączony do Servera
+\item Voldemort łączy się z~Serverem jako \texttt{harry} i~udostępnia
+jakieś pliki
+\item Ron wchodzi na \texttt{http://hogwart/harry} i~podaje dane
+uwierzytelniające
+\item Server przesyła te dane do Voldemorta, żeby sprawdził czy są poprawne
+\item Voldemort wylogowuje się z~Servera
+\item Harry łączy się z~Serverem
+\item Voldemort używa danych uwierzytelniających, które dostał od Rona aby
+uzyskać dostęp do plików na \texttt{http://hogwart/harry}
+\end{itemize}
+
+\subsection{Podsłuchiwanie połączenia}
+\subsubsection*{Opis zagrożenia}
+Ponieważ żadne z~połączeń nie jest szyfrowane, atakujący może je podsłuchać,
+co daje mu możliwość uzyskania bezprawnego dostępu do plików.
+\subsubsection*{Proponowane rozwiązanie}
+Wszystkie połączenia powinny być szyfrowane.
+
+\section{Zagrożenia integralności}
+\subsection{Zmienianie danych ,,w~locie''}
+\subsubsection*{Opis zagrożenia}
+Przy nieszyfrowanym połączeniu atakujący może dowolnie zmieniać przesyłane
+dane.
+\subsubsection*{Proponowane rozwiązanie}
+Wszystkie połączenia powinny być szyfrowane.
+
+\subsection{Podmienienie HiddenServera}
+\subsubsection*{Opis zagrożenia}
+Atakujący może połączyć się z~Serverem używając nie swojej nazwy użytkownika.
+Client łączący się z~takim HiddenServerem dostanie inne pliki 
+niż się spodziewał.
+
+Warto zauważyć, że w~bieżącej implementacji taki atak jest możliwy nawet
+jeżeli użytkownik jest już zalogowany (drugie logowanie ,,anuluje'' pierwsze).
+\subsubsection*{Proponowane rozwiązanie}
+HiddenServery powinny być autentykowane przy logowaniu 
+(opisane w~(\ref{podmianaHiddenServera}))
+
+\section{Zagrożenia dostępności}
+\subsection{Podmiana HiddenServera}
+\label{podmianaHiddenServera}
+\subsubsection*{Opis zagrożenia}
+Atakujący może połączyć się z~Serverem używając nie swojej nazwy użytkownika.
+Client nie będzie w~stanie dostać się do plików zaatakowanego HiddenServera.
+
+\subsubsection*{Proponowane rozwiązanie}
+HiddenServery powinny być autentykowane przy logowaniu (na przykład przez
+podanie loginu i~hasła). Warto zauważyć, że przy logowaniu musi być
+autentykacja Servera oraz szyfrowanie połączenia 
+(patrz: (\ref{podmianaServera})), gdyż w~przeciwnym
+przypadku atakujący może wykraść hasło HiddenServera.
+
+\subsection{Zapchanie pamięci cache}
+Patrz: Przepełnienie pamięci cache (\ref{przepelnienieCacheu}). 
+\subsubsection*{Opis zagrożenia}
+Atakujący może spowodować zapchanie pamięci cache niepotrzebnymi plikami
+wykonując wiele zapytań o~losowe pliki z~HiddenServerów. Warto zauważyć,
+że atakujący nie musi ściągać pliku na swój komputer --- Server będzie
+kontynuował pobieranie do pamięci cache nawet po przerwaniu połączenia
+przez Clienta.
+
+Zapchanie pamięci cache powoduje zmniejszenie wydajności działania Servera,
+a~co za tym idzie, może spowodować brak dostępności dla Clientów.
+
+\subsubsection*{Proponowane rozwiązanie}
+Server może przerywać pobieranie pliku z~HiddenServera w~momencie gdy
+Client zrywa połączenie. Ponadto, Server może tworzyć listy Clientów,
+którzy często zrywają połączenie i~nie obsługiwać ich (albo np. zmniejszać
+im przepustowość).
+
+\end{document}
