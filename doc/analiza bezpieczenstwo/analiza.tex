@@ -222,6 +222,9 @@ HiddenServery powinny być autentykowane przy logowaniu
 \subsubsection*{Opis zagrożenia}
 Atakujący może połączyć się z~Serverem używając nie swojej nazwy użytkownika.
 Client nie będzie w~stanie dostać się do plików zaatakowanego HiddenServera.
+Atakujący może ponawiać swoję podłączenie się do Servera co krótki odstęp czasu, 
+albo każdorazowo kiedy zauważy że stracił połączenie. Uniemożliwiając tym samym
+zaatakowanemu HiddenServerowi powrotu do udostępniania plików.
 
 \subsubsection*{Proponowane rozwiązanie}
 HiddenServery powinny być autentykowane przy logowaniu (na przykład przez
