@@ -54,7 +54,7 @@ class HttpRequest(BaseHTTPRequestHandler, object):
                 self.send_response(200)
             type = guess_type(info.filename)[0]
             if type is None or info.fileType == "directory":
-                type = 'text/html; charset=UTF-8'
+                type = 'text/html; charset=utf-8'
             self.send_header('Content-type', type)
             self.send_header('Last-Modified', formatDate(info.modifyTime))
             length = end - begin
