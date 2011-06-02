@@ -98,7 +98,6 @@ class HiddenServerConnection(asynchat.async_chat, object):
             if self.user != "":
                 del fileManager.hiddenServerConnections[self.user]
 
-
 class HSServer(asyncore.dispatcher, object):
     '''Klasa odpowiedzialna za tworzenie HiddenServerConnectionów'''
 
