@@ -2,6 +2,7 @@
 # coding=utf-8
 import os
 
+databaseFile = "base.db"
 httpPort = 8080
 cacheDir = 'cache'
 cacheMaxSize = 100*1024**2 # 100 MB
