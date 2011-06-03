@@ -8,8 +8,9 @@ from Queue import Queue
 from helper import parseData
 import base64
 from logging import debug
+from ssl_asyncchat import SSLAsyncChat, SSLAsyncDispatcher
 
-class HiddenServerConnection(asynchat.async_chat, object):
+class HiddenServerConnection(SSLAsyncChat, object):
     '''Klasa reprezentująca trwałe połączenie HiddenServera z Serverem
     
     Pola:
@@ -22,6 +23,7 @@ class HiddenServerConnection(asynchat.async_chat, object):
         i dodane do mapy asyncore map (None oznacza domyślną mapę)."""
         self.buffer = ""
         asynchat.async_chat.__init__(self, sock, map=map)
+        self.init_server_side()
         self.requestQueue = Queue()
         self.sentRequests = Queue()
         self.set_terminator("\n\n")
@@ -98,7 +100,7 @@ class HiddenServerConnection(asynchat.async_chat, object):
             if self.user != "":
                 del fileManager.hiddenServerConnections[self.user]
 
-class HSServer(asyncore.dispatcher, object):
+class HSServer(SSLAsyncDispatcher, object): # asyncore.dispatcher
     '''Klasa odpowiedzialna za tworzenie HiddenServerConnectionów'''
 
     def __init__(self, port, reuseAddress=False, map=None):
@@ -116,10 +118,13 @@ class HSServer(asyncore.dispatcher, object):
 
     def handle_accept(self):
         """Nadpisuje odpowiednią metodę w asyncore.dispatcher."""
+        print "MIBDBG: cos do zaakceptowania"
         p = self.accept()
+        print "zaakceptowano ", p
         if not p:
             return
         conn, addr = p
+        print "tworze polaczenie"
         HiddenServerConnection(conn, self.map)
         
 def startHSServer():
