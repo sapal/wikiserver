@@ -8,11 +8,12 @@ import os
 import threading
 from tempfile import mkstemp
 from optparse import OptionParser
+from ssl_asyncchat import SSLAsyncChat
 
 def done_fun(name):
     print 'Goodbye ' + name + "!"
 
-class HiddenServer(asynchat.async_chat):
+class HiddenServer(SSLAsyncChat, object):
     """ Klasa odpowiedzialna za trwałe połączenie z Serverem - na porcie 8888.
     """
     def __init__(self, host, path, myname):
@@ -37,7 +38,9 @@ class HiddenServer(asynchat.async_chat):
     def handle_connect(self):
         """ Nadpisuje odpowiednią metodę w asyncore.dispatcher.
         """
+        super(HiddenServer, self).handle_connect()
         pass
+        
     def handle_close(self):
         """ Nadpisuje odpowiednią metodę w asyncore.dispatcher.
         """
