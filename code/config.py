@@ -4,6 +4,7 @@ import os
 
 databaseFile = "base.db"
 httpPort = 8080
+httpsPort = 8081
 cacheDir = 'cache'
 cacheMaxSize = 100*1024**2 # 100 MB
 _f = os.path.abspath(__file__)

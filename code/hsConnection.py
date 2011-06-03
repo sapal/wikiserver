@@ -1,13 +1,15 @@
 # coding=utf-8
 
-from fileManager import fileManager
 import threading
 import asynchat, asyncore
 import socket
+import base64
+
 from Queue import Queue
 from helper import parseData
-import base64
 from logging import debug
+
+from fileManager import fileManager
 from ssl_asyncchat import SSLAsyncChat, SSLAsyncDispatcher
 
 class HiddenServerConnection(SSLAsyncChat, object):
@@ -118,13 +120,10 @@ class HSServer(SSLAsyncDispatcher, object):
 
     def handle_accept(self):
         """Nadpisuje odpowiednią metodę w asyncore.dispatcher."""
-        print "MIBDBG: cos do zaakceptowania"
         p = self.accept()
-        print "zaakceptowano ", p
         if not p:
             return
         conn, addr = p
-        print "tworze polaczenie"
         HiddenServerConnection(conn, self.map)
         
 def startHSServer():
