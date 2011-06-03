@@ -6,7 +6,7 @@ import ssl
 import errno
 import select
 
-from time import sleep
+from config import SSL_C_CACERTS, SSL_S_CERTFILE, SSL_S_KEYFILE
 
 def _log(msg):
     print "[SSLSupport::] ", msg
@@ -23,7 +23,7 @@ class SSLAsyncChat(asynchat.async_chat):
     """ Inicjalizuje wsparcie SSL po stronie serwera. """
     def init_server_side(self):
         _log("server socket wrapping")
-        self.ssl = ssl.wrap_socket(self.socket, server_side=True, certfile='server.crt', keyfile='server.key', do_handshake_on_connect=False)
+        self.ssl = ssl.wrap_socket(self.socket, server_side=True, certfile=SSL_S_CERTFILE, keyfile=SSL_S_KEYFILE, do_handshake_on_connect=False)
         while True:
             try:
                 self.ssl.do_handshake()
@@ -42,7 +42,7 @@ class SSLAsyncChat(asynchat.async_chat):
     def handle_connect(self):
         """ Obkłada socket klienta protokołem SSL. """
         _log("Switching transmission to SSL (ClientSide)")
-        self.ssl = ssl.wrap_socket(self.socket, cert_reqs=ssl.CERT_NONE, do_handshake_on_connect=False)
+        self.ssl = ssl.wrap_socket(self.socket, cert_reqs=ssl.CERT_REQUIRED, do_handshake_on_connect=False, ca_certs=SSL_C_CACERTS)
         self.set_socket(self.ssl)
         while True:
             try:

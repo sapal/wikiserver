@@ -100,7 +100,7 @@ class HiddenServerConnection(SSLAsyncChat, object):
             if self.user != "":
                 del fileManager.hiddenServerConnections[self.user]
 
-class HSServer(SSLAsyncDispatcher, object): # asyncore.dispatcher
+class HSServer(SSLAsyncDispatcher, object):
     '''Klasa odpowiedzialna za tworzenie HiddenServerConnectionów'''
 
     def __init__(self, port, reuseAddress=False, map=None):
@@ -134,7 +134,7 @@ def startHSServer():
     print("Starting HSServer.")
     asyncore.loop(map=m)
 
-class PushFileConnection(asynchat.async_chat, object):
+class PushFileConnection(SSLAsyncChat, object):
     '''Klasa reprezentująca połączenie przesyłające plik z HiddenServera do Servera.
     Zapisuje dane do odpowiedniego pliku i przy każdym zapisie wywołuje sizeChanged().
     '''
@@ -143,6 +143,7 @@ class PushFileConnection(asynchat.async_chat, object):
         """Tworzy nowe PushFileConnection na gniazdku sock
         i dodane do mapy asyncore map (None oznacza domyślną mapę)."""
         asynchat.async_chat.__init__(self, sock=sock, map=map)
+        self.init_server_side()
         self.BUFFER_SIZE = 16*1024
         self.set_terminator("\n\n")
         self.data = []
@@ -214,7 +215,7 @@ class PushFileConnection(asynchat.async_chat, object):
             self.fileInfo.setBroken()
         self.close()
         
-class PushFileServer(asyncore.dispatcher, object):
+class PushFileServer(SSLAsyncDispatcher, object):
     '''Klasa odpowiedzialna za tworzenie PushFileConnectionów'''
 
     def __init__(self, port, reuseAddress=True, map=None):

@@ -8,7 +8,9 @@ import os
 import threading
 from tempfile import mkstemp
 from optparse import OptionParser
+import ssl
 from ssl_asyncchat import SSLAsyncChat
+from config import SSL_C_CACERTS
 
 def done_fun(name):
     print 'Goodbye ' + name + "!"
@@ -135,13 +137,12 @@ class HiddenServer(SSLAsyncChat, object):
         self.answerToFile(tmpfile, filename, 'directory')
         # usuwane w PushFileConnection - po przeslaniu
 
-class PushFileConnectionClient(socket.socket):
+class PushFileConnectionClient(object):
     """ Klasa odpowiedzialna za chwilowe połaczenie z Serverem - na porcie 9999. Służy do wysłania pojedynczego pliku.
     """
     def __init__(self, host, filename, fakeFilename, typ, id):
-        socket.socket.__init__(self, socket.AF_INET, socket.SOCK_STREAM)
-        #print 'hello init'
-        self.connect( (host, 9999))
+        self.socket = ssl.wrap_socket(socket.socket(socket.AF_INET, socket.SOCK_STREAM), cert_reqs=ssl.CERT_REQUIRED, do_handshake_on_connect=False, ca_certs=SSL_C_CACERTS)
+        self.socket.connect( (host, 9999))
         self.buffer = ""
         self.filename = filename
         self.fakeFilename = filename
@@ -152,7 +153,7 @@ class PushFileConnectionClient(socket.socket):
         """ Funkcja wysyła dane z buffera (do Servera).
         """
         while len(self.buffer)>0:
-            sent = self.send(self.buffer)
+            sent = self.socket.send(self.buffer)
             self.buffer = self.buffer[sent:]
             # print(sent)
 
@@ -173,7 +174,7 @@ class PushFileConnectionClient(socket.socket):
             self.buffer += data
             self.sendBuffer()
             data = f.read(dSize)
-        self.close()
+        self.socket.close()
         f.close()
         if(self.typ == 'directory'):
             os.remove(self.filename)
