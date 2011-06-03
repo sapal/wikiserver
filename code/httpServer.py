@@ -1,4 +1,7 @@
 # coding=utf-8
+import socket, ssl
+
+from SocketServer import BaseServer
 from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
 from fileManager import fileManager,FileInfo
 from urllib import quote,unquote
@@ -6,6 +9,7 @@ from SocketServer import ThreadingMixIn
 from mimetypes import guess_type
 from logging import debug
 from helper import formatDate
+
 import config
 
 class HttpRequest(BaseHTTPRequestHandler, object):
@@ -142,13 +146,23 @@ class HttpRequest(BaseHTTPRequestHandler, object):
 
 class HttpServer(ThreadingMixIn, HTTPServer):
     '''Klasa odpowiedzialna za tworzenie HttpRequestów'''
-    def __init__(self, interface='', port=config.httpPort, handler=HttpRequest) :
+    def __init__(self, interface='', port=config.httpPort, handler=HttpRequest, useSSL=True) :
         """Tworzy HttpServer na interfejsie interface ('' oznacza wszystkie interfejsy),
         porcie port z HTTPRequestHandlerem handler."""
-        HTTPServer.__init__(self,(interface,port),handler)
-
-def start():
+        if not useSSL:
+            HTTPServer.__init__(self,(interface,port),handler)
+        else:
+            BaseServer.__init__(self, (interface, port), handler)
+            self.socket = ssl.wrap_socket( socket.socket(self.address_family, self.socket_type), server_side=True, certfile=config.SSL_S_CERTFILE, keyfile=config.SSL_S_KEYFILE)
+            self.server_bind()
+            self.server_activate()
+        
+def start(port, secure):
     """Uruchom HttpServer na porcie config.httpPort."""
-    server = HttpServer(port=config.httpPort)
-    print("Starting HttpServer.")
+    server = HttpServer(port=port, useSSL=secure)
+    if not secure:
+        print("Starting HttpServer")
+    else:
+        print("Starting HttpsServer")
     server.serve_forever()
+

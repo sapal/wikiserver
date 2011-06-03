@@ -25,9 +25,14 @@ if __name__=="__main__":
     config.cacheMaxSize = options.cacheMaxSize*1024
     config.databaseFile = options.database
 
-    http = threading.Thread(target=httpServer.start)
+    http = threading.Thread(target=httpServer.start, args=(config.httpPort, False))
     http.daemon = True
     http.start()
+    
+    https = threading.Thread(target=httpServer.start, args=(config.httpsPort, True))
+    https.daemon = True
+    https.start()
+    
     push= threading.Thread(target=hsConnection.startPushFileServer)
     push.daemon = True
     push.start()
