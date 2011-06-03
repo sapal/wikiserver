@@ -5,8 +5,10 @@ import os
 import shutil
 import time
 import config
-from logging import basicConfig, debug, ERROR
-basicConfig(filename='log', level=ERROR, filemode='w')
+from helper import getAuthentication
+from database import PasswordDatabase
+from logging import basicConfig, debug, DEBUG
+basicConfig(filename='log', level=DEBUG, filemode='w')
 
 class FileInfo :
     '''Klasa odpowiedzialna za dostarczanie informacji o plikach.
@@ -18,7 +20,7 @@ class FileInfo :
     path = "" -- Bezwzględna ścieżka do pliku (użytkownik/katalog/.../plik)
     filename = "" -- Nazwa pliku na Serverze
     fileModified = threading.Condition() -- Condition, na którym robione jest notifyAll, gdy plik "filename" jest modyfikowany
-    fileType = "not found" -- Typ pliku. Możliwe są trzy wartości: "not found"/"file"/"directory"
+    fileType = "not found" -- Typ pliku. Możliwe są cztery wartości: "not found"/"authentication required"/"file"/"directory"
     usersCount = 0 -- Liczba wątków używających tego pliku (wątki używające pliku są zobowiązane wywołać metody startUsing oraz stopUsing)
     lastUse = 0 -- Czas ostatniego użycia tego pliku (ustawiane w startUsing)
     useCount = 0 -- Liczba użyć tego pliku (ustawiane w startUsing)
@@ -208,11 +210,16 @@ class FileManager :
         info.filename = filename
         if filename == config.cacheDir + "/users":
             f = open(filename,"w")
-            for user in self.hiddenServerConnections.keys():
-                f.write(user+"\n")
+            if PasswordDatabase().authenticateUser(*getAuthentication(originalRequest)):
+                for user in self.hiddenServerConnections.keys():
+                    f.write(user+"\n")
+                info.fileType = "directory"
+            else:
+                f.write("Brak uprawnień\n")
+                info.fileType = "authentication required"
             f.close()
+            debug(info.fileType)
             info.filename = filename
-            info.fileType = "directory"
             info.size = info.currentSize = os.path.getsize(info.filename)
             info.setModifyTime(time.time())
             with self.requestInfoLock:

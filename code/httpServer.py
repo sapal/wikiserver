@@ -39,6 +39,12 @@ class HttpRequest(BaseHTTPRequestHandler, object):
                         str(self.headers)]))
             if info.fileType == "not found":
                 raise IOError()
+            elif info.fileType == "authentication required":
+                self.send_response(401)
+                self.send_header('WWW-Authenticate', 'Basic realm=\"Wikiserver\"')
+                self.send_header('Content-type', 'text/html')
+                self.end_headers()
+                return
             if 'If-Modified-Since' in self.headers: 
                 if self.headers['If-Modified-Since'] == formatDate(info.modifyTime):
                     self.send_response(304)
