@@ -23,17 +23,35 @@ def formatDate(timestamp):
     """Formatuje datę tak, jak każe HTTP (zwraca string)."""
     return format_date_time(timestamp)
 
-def getAuthentication(base64httpRequest):
+def toUnicode(text):
+    """Zamienia tekst na unicode (utf-8), o ile jeszcze nim nie jest."""
+    if isinstance(text, unicode):
+        return text
+    else:
+        return unicode(text, "utf-8")
+
+def getAuthentication(httpRequest):
     """Zwraca informacje do autoryzacji (login, hasło)
-    z zakodowanego base64 requestu http.
+    z requestu http (format INNY NIŻ w protokole SW 
+    - nie zakodowane base64).
     W przypadku braku takowych zwraca ("","").
+    PATRZ TEŻ: getAuthenticationBase64(base64httpRequest)
     
     UWAGA: Nie używać dwukropków w loginach (nie zadziała)."""
-    request = base64.b64decode(base64httpRequest)
-    p = re.compile("^\s*Authorization\s*:\s*Basic\s*(\S*)$", re.IGNORECASE|re.MULTILINE)
+    request = httpRequest
+    p = re.compile("^\s*Authorization\s*:\s*Basic\s*(\S*)", re.IGNORECASE|re.MULTILINE|re.UNICODE)
     m = p.search(request)
     try:
         return tuple(map(lambda x: unicode(x, "utf-8"), base64.b64decode(m.group(1)).split(":",1)))
     except:
-        return ("","")
+        return (u"",u"")
+
+def getAuthenticationBase64(base64httpRequest):
+    """Zwraca informacje do autoryzacji (login, hasło)
+    z zakodowanego base64 requestu http (format jak w protokole SW).
+    W przypadku braku takowych zwraca ("","").
+    
+    UWAGA: Nie używać dwukropków w loginach (nie zadziała)."""
+    request = base64.b64decode(base64httpRequest)
+    return getAuthentication(request)
 
