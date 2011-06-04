@@ -5,6 +5,7 @@ import asynchat, asyncore
 import socket
 import base64
 
+from database import PasswordDatabase
 from Queue import Queue
 from helper import parseData
 from logging import debug
@@ -19,7 +20,7 @@ class HiddenServerConnection(SSLAsyncChat, object):
     requestQueue = Queue() -- Kolejka zapytań do wysłania HiddenServerowi
     user = "" -- Nazwa użytkownika
     '''
-    responses = ["OK", "OLD", "MYNAMEIS", "NOPE"]
+    responses = ["OK", "OLD", "MYNAMEIS", "NOPE", "REJ"]
     def __init__(self, sock, map=None):
         """Tworzy nowe HiddenServerConnection słuchające na gniazdku sock
         i dodane do mapy asyncore map (None oznacza domyślną mapę)."""
@@ -43,18 +44,27 @@ class HiddenServerConnection(SSLAsyncChat, object):
         global fileManager
         while True:
             request = self.requestQueue.get()
-            debug("GOT REQUEST:"+request['filename'])
-            path = self.user + request['filename']
-            with self.stopLock:
-                info = fileManager.startUsingFileInfo(path)
-                request['modifytime'] = info.modifyTime
-                debug('REQUEST: '+self.user+' '+str(request))
-                self.sentRequests.put((request, info))
-            self.buffer += "GET\nfilename:{filename}\nmodifytime:{modifytime}\nid:{id}\noriginalRequest:{0}\n\n".format(
-                base64.b64encode(request['originalRequest']), **request) 
+            method = "GET"
+            if 'method' in request:
+                method = request["method"]
+            if method == "GET":
+                debug("GOT REQUEST:"+request['filename'])
+                path = self.user + request['filename']
+                with self.stopLock:
+                    info = fileManager.startUsingFileInfo(path)
+                    request['modifytime'] = info.modifyTime
+                    debug('REQUEST: '+self.user+' '+str(request))
+                    self.sentRequests.put((request, info))
+                self.buffer += "GET\nfilename:{filename}\nmodifytime:{modifytime}\nid:{id}\noriginalRequest:{0}\n\n".format(
+                    base64.b64encode(request['originalRequest']), 
+                    **request) 
+            elif method == "REJ":
+                self.buffer += "REJ\n\n"
             while len(self.buffer)>0:
                 sent = self.send(self.buffer)
                 self.buffer = self.buffer[sent:]
+            if method == "REJ":
+                self.close()
             debug("REQUEST SENT")
 
     def collect_incoming_data(self, data):
@@ -68,8 +78,15 @@ class HiddenServerConnection(SSLAsyncChat, object):
         self.response = {}
         if r['response'] == "MYNAMEIS":
             self.user = r['username'].strip()
-            fileManager.hiddenServerConnections[self.user] = self
-            print("SW: User '{0}' connected.".format(self.user))
+            password = r['mypass'].strip()
+            if PasswordDatabase().authenticateUser(self.user, password):
+                fileManager.hiddenServerConnections[self.user] = self
+                print("SW: User '{0}' connected.".format(self.user))
+            else:
+                print("SW: Bad password for user '{0}'.".format(self.user))
+                self.requestQueue.put({
+                    'method':'REJ'
+                    });
             return
         else:
             with self.stopLock:

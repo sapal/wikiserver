@@ -281,6 +281,10 @@ class FileManager :
                 self.requestInfo[requestId].filetype = 'not found'
                 self.requestInfo[requestId].size = 0
                 self.requestInfo[requestId].currentSize = 0
+            elif HSresponse['response'] == 'REJ':
+                self.requestInfo[requestId].filetype = "authentication required"
+                self.requestInfo[requestId].size = 0
+                self.requestInfo[requestId].currentSize = 0
             self.requestInfo[requestId].startUsing()
             self.cleanCache()
 
