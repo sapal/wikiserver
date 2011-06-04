@@ -18,7 +18,7 @@ def done_fun(name):
 class HiddenServer(SSLAsyncChat, object):
     """ Klasa odpowiedzialna za trwałe połączenie z Serverem - na porcie 8888.
     """
-    def __init__(self, host, path, myname):
+    def __init__(self, host, path, myname, password):
         self.buffer = ""
         asynchat.async_chat.__init__(self)
         self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -28,6 +28,7 @@ class HiddenServer(SSLAsyncChat, object):
         self.path = path
         self.connect( (host, 8888))
         self.myname = myname
+        self.password = password
         print "Hello. Thanks for using WikiServer. You are now known as " + self.myname + "."
         self.buffer = 'MYNAMEIS\nusername:' + self.myname + '\n\n'
         # print 'MYNAMEIS:' + self.myname + '\r\n'
@@ -75,6 +76,12 @@ class HiddenServer(SSLAsyncChat, object):
     def answerToGet(self):
         """ Funkcja odpowiada na zapytanie typu GET.        
         """
+        # todo when originalRequest is passed
+        # originalRequest = self.req['originalRequest']
+        if(0): # todo if pass is ok
+            print 'Unauthenticated user'
+            self.answerToRej()
+            return
         filename = self.req['filename']
         if(filename[0] == '/'):
             filename = filename[1:]
@@ -98,7 +105,11 @@ class HiddenServer(SSLAsyncChat, object):
         if(os.path.isdir(filename)):
             self.answerToDir(filename)
             return
-
+            
+    def answerToNope(self):
+        """ Funkcja wysyła informację, że poszukiwany dokument nie istnieje (do Servera).
+        """
+        self.buffer += 'REJ\nid:' + self.req['id'] + '\n\n'
     def answerToNope(self):
         """ Funkcja wysyła informację, że poszukiwany dokument nie istnieje (do Servera).
         """
@@ -195,6 +206,7 @@ if __name__ == '__main__':
     parser.add_option('--host', dest='host', help='host to connect to, default is localhost')
     parser.add_option('-n', '--name', dest='hidden_server_name', help='name of your hidden server, default is servus')
     parser.add_option('-d', '--dir', dest='directory', help='the directory you want to share')
+    parser.add_option('-p', '--pass', dest='password', help='password for viewers')
     (options, args) = parser.parse_args()
     host = 'localhost'
     if(options.host!=None):
@@ -203,9 +215,12 @@ if __name__ == '__main__':
     directory = '/'
     if(options.directory!=None):
         directory = options.directory
+    password = ''
+    if(options.password!=None):
+        password = options.directory
     if(options.hidden_server_name!=None):
         name = options.hidden_server_name
-        client = HiddenServer(host, directory, name)
+        client = HiddenServer(host, directory, name, password)
         asyncore.loop()
     else:
         print 'Brak nazwy serwera. Podaj z opcja -n albo --name. Więcej opcji: -h.'

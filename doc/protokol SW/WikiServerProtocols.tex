@@ -47,8 +47,10 @@ Hidden Server podłącza się do Servera (na porcie 8888) i wysyła polecenie po
 \begin{itemize}
     \item \texttt{MYNAMEIS \textbackslash n}
     \item \texttt{username:name \textbackslash n}
+    \item \texttt{password:pass \textbackslash n}    
     \item \texttt{\textbackslash n}
 \end{itemize}
+Gdzie pass jest hasłem umożliwiającym przeglądanie udostępnionego katalogu.\\
 Połączenie to powinno być przez cały czas podtrzymywane.\\
 
 Server wysyła do Hidden Servera polecenia postaci:
@@ -74,6 +76,12 @@ Pierwszy odpowiada sytuacji gdy Server prosi Clienta o jakiś plik.\\
 Drugi odpowiada sytuacji gdy dany Server jest przeciążony i prosi Hidden Server o przełączenie się na inny Server. (Może być wykorzystywane w momencie gdy jest więcej Serverów).\\
 HS na pierwszy typ zapytania powinien wykonać następujące:
 \begin{enumerate}
+    \item jeśli hasło (w originalRequest) jest błędne, lub z innego powodu nie ma uprawnien do przeglądania katalogu
+    \begin{itemize}   
+        \item \texttt{REJ \textbackslash n}
+        \item \texttt{id:id zapytania \textbackslash n}
+        \item \texttt{\textbackslash n}
+    \end{itemize}
     \item jeśli plik/folder nie istnieje, Hidden Server powinien odpowiedzieć poleceniem postaci:
     \begin{itemize}   
         \item \texttt{NOPE \textbackslash n}
