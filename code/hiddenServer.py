@@ -78,11 +78,12 @@ class HiddenServer(SSLAsyncChat, object):
         """ Funkcja odpowiada na zapytanie typu GET.        
         """
         # todo when originalRequest is passed
-        # originalRequest = self.req['originalRequest']
-        if(0): # todo if pass is ok
-            print 'Unauthenticated user'
-            self.answerToRej()
-            return
+    #    originalRequest = self.req['originalRequest']
+     #   (login, pas) = helper.getAuthenticationBase64(originalRequest)
+      #  if(pas != self.password): # todo if pass is ok
+       #     print 'Unauthenticated user'
+        #    self.answerToRej()
+         #   return
         filename = self.req['filename']
         if(filename[0] == '/'):
             filename = filename[1:]
