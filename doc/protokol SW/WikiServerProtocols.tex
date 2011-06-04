@@ -47,10 +47,10 @@ Hidden Server podłącza się do Servera (na porcie 8888) i wysyła polecenie po
 \begin{itemize}
     \item \texttt{MYNAMEIS \textbackslash n}
     \item \texttt{username:name \textbackslash n}
-    \item \texttt{password:pass \textbackslash n}    
+    \item \texttt{mypass:pass \textbackslash n}
     \item \texttt{\textbackslash n}
 \end{itemize}
-Gdzie pass jest hasłem umożliwiającym przeglądanie udostępnionego katalogu.\\
+Gdzie mypass jest hasłem użytkownika.\\
 Połączenie to powinno być przez cały czas podtrzymywane.\\
 
 Server wysyła do Hidden Servera polecenia postaci:
@@ -70,10 +70,16 @@ Server wysyła do Hidden Servera polecenia postaci:
     \item \texttt{go:adres innego serwera \textbackslash n}
     \item \texttt{\textbackslash n}
 \end{itemize}
+    \item
+\begin{itemize}    
+    \item \texttt{REJ \textbackslash n}
+    \item \texttt{\textbackslash n}
+\end{itemize}
 \end{enumerate}
 Gdzie wszystkie informacje są stringami bez enterów a pole modifytime jest opcjonalne. \\
 Pierwszy odpowiada sytuacji gdy Server prosi Clienta o jakiś plik.\\ 
 Drugi odpowiada sytuacji gdy dany Server jest przeciążony i prosi Hidden Server o przełączenie się na inny Server. (Może być wykorzystywane w momencie gdy jest więcej Serverów).\\
+Trzeci odpowiada sytuacji gdy podana nazwa użytkownika i/lub hasło są niepoprawne.\\
 HS na pierwszy typ zapytania powinien wykonać następujące:
 \begin{enumerate}
     \item jeśli hasło (w originalRequest) jest błędne, lub z innego powodu nie ma uprawnien do przeglądania katalogu

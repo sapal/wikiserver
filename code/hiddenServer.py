@@ -18,7 +18,7 @@ def done_fun(name):
 class HiddenServer(SSLAsyncChat, object):
     """ Klasa odpowiedzialna za trwałe połączenie z Serverem - na porcie 8888.
     """
-    def __init__(self, host, path, myname, password):
+    def __init__(self, host, path, myname, mypass, password):
         self.buffer = ""
         asynchat.async_chat.__init__(self)
         self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -28,9 +28,10 @@ class HiddenServer(SSLAsyncChat, object):
         self.path = path
         self.connect( (host, 8888))
         self.myname = myname
+        self.mypass = mypass
         self.password = password
         print "Hello. Thanks for using WikiServer. You are now known as " + self.myname + "."
-        self.buffer = 'MYNAMEIS\nusername:' + self.myname + '\n\n'
+        self.buffer = 'MYNAMEIS\nusername:' + self.myname + '\nmypass:' + self.mypass + '\n\n'
         # print 'MYNAMEIS:' + self.myname + '\r\n'
         self.data = []
         self.set_terminator('\n\n')
@@ -72,7 +73,7 @@ class HiddenServer(SSLAsyncChat, object):
         self.req = parseData(request)
         #print self.req
         if(self.req['response'] == 'GET'):
-            self.answerToGet()
+            self.answerToGet()    
     def answerToGet(self):
         """ Funkcja odpowiada na zapytanie typu GET.        
         """
@@ -204,9 +205,10 @@ def newThreadPushFile(host, filename, fakeFilename, typ, id):
 if __name__ == '__main__':
     parser = OptionParser()
     parser.add_option('--host', dest='host', help='host to connect to, default is localhost')
-    parser.add_option('-n', '--name', dest='hidden_server_name', help='name of your hidden server, default is servus')
-    parser.add_option('-d', '--dir', dest='directory', help='the directory you want to share')
-    parser.add_option('-p', '--pass', dest='password', help='password for viewers')
+    parser.add_option('-n', '--name', dest='hidden_server_name', help='name of your hidden server')
+    parser.add_option('-d', '--dir', dest='directory', help='the directory you want to share, default is .')
+    parser.add_option('-m', '--mypass', dest='mypass', help='your user password, default is empty')
+    parser.add_option('-p', '--pass', dest='password', help='password for viewers, default is empty')
     (options, args) = parser.parse_args()
     host = 'localhost'
     if(options.host!=None):
@@ -218,9 +220,12 @@ if __name__ == '__main__':
     password = ''
     if(options.password!=None):
         password = options.directory
+    mypass = ''    
+    if(options.mypass!=None):
+        mypass = options.mypass
     if(options.hidden_server_name!=None):
         name = options.hidden_server_name
-        client = HiddenServer(host, directory, name, password)
+        client = HiddenServer(host, directory, name, mypass, password)
         asyncore.loop()
     else:
         print 'Brak nazwy serwera. Podaj z opcja -n albo --name. Więcej opcji: -h.'
