@@ -214,6 +214,12 @@ class PushFileConnection(SSLAsyncChat, object):
         self.header = parseData(data)
         self.formatHeader()
         self.fileInfo = fileManager.requestInfo[self.header['id']]
+        user = fileManager.getUser(self.fileInfo.path)
+        password = self.header['mypass']
+        if not PasswordDatabase().authenticateUser(user, password):
+            print("PUSH FILE: authentication failed ({0}, {1})".format(user, password))
+            self.close()
+            return
         self.fileInfo.fileType = self.header['type']
         self.fileInfo.size = self.header['size']
         self.file = open(self.fileInfo.filename, 'w')
