@@ -41,6 +41,9 @@ class FileInfo :
         self.useCount = 0
         self.broken = False
 
+    def __str__(self):
+        return "FileInfo<path:'{0}' fileType:'{1}'>".format(self.path, self.fileType)
+
     def setBroken(self):
         """Zaznacza plik jako zepsuty i usuwa go z fileManager.fileInfo,
         jeśli to konieczne."""
@@ -131,7 +134,7 @@ class FileManager :
                         del self.requestInfo[id]
                         if f.path in self.fileInfo:
                             del self.fileInfo[f.path]
-                        if f.fileType != 'not found':
+                        if f.fileType not in ('not found', 'authentication required'):
                             os.remove(f.filename)
                         totalSize -= f.size
                         if totalSize <= cacheMax:
@@ -243,7 +246,7 @@ class FileManager :
             try:
                 with self.requestInfoLock:
                     self.requestInfo[id] = info
-                debug("getFileInfo({0}), sending request".format(filename))
+                debug("getFileInfo({0}), sending request {1}".format(filename, id))
                 cond = threading.Condition()
                 with cond:
                     user = self.getUser(path)
@@ -273,18 +276,21 @@ class FileManager :
     def processResponse (self, requestId, HSresponse, fileInfo) :
         """ Przetwarza odpowiedź od HiddenServera i uaktualnia odpowiednie struktury """
         with self.requestInfoLock:
+            debug("PROCESS: {0}".format(HSresponse))
             if HSresponse['response'] == 'OK':
                 self.requestInfo[requestId] = fileInfo
             elif HSresponse['response'] == 'OLD':
                 self.requestInfo[requestId].setModifyTime(float(HSresponse['modifytime']))
             elif HSresponse['response'] == 'NOPE':
-                self.requestInfo[requestId].filetype = 'not found'
+                self.requestInfo[requestId].fileType = 'not found'
                 self.requestInfo[requestId].size = 0
                 self.requestInfo[requestId].currentSize = 0
             elif HSresponse['response'] == 'REJ':
-                self.requestInfo[requestId].filetype = "authentication required"
+                print("REJ")
+                self.requestInfo[requestId].fileType = "authentication required"
                 self.requestInfo[requestId].size = 0
                 self.requestInfo[requestId].currentSize = 0
+            debug(str(requestId) + u" " +str(self.requestInfo[requestId]))
             self.requestInfo[requestId].startUsing()
             self.cleanCache()
 

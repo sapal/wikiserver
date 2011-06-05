@@ -2,7 +2,7 @@
 # coding=utf-8
 import os
 
-databaseFile = "base.db"
+databaseFile = "users.db"
 httpPort = 8080
 httpsPort = 8081
 cacheDir = 'cache'

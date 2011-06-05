@@ -8,33 +8,33 @@ from database import PasswordDatabase
 
 if __name__ == "__main__":
     parser = OptionParser()
-    parser.add_option('-a', '--add-hidden-server', dest='addHS', action='store_true', default=False, help='adds new HiddenServer. Requires --name and --password options.')
-    parser.add_option('-r', '--remove-hidden-server', dest='removeHS', action='store_true', default=False, help='removes HiddenServer. Requires --name option.')
-    parser.add_option('-n', '--name', dest='name', default="", help='HiddenServer\'s name.')
-    parser.add_option('-p', '--password', dest='password', default="", help='HiddenServer\'s password.')
-    parser.add_option('-d', '--database', dest='database', help='database file to use (for storing HiddenServer\'s passwords. Default: hidden-servers.db', default='hidden-servers.db')
-    parser.add_option('-l', '--list-hidden-servers', dest='listHS', help='list all HiddenServers (only names).', default=False, action='store_true')
+    parser.add_option('-a', '--add-user', dest='addUser', action='store_true', default=False, help='adds new user. Requires --name and --password options.')
+    parser.add_option('-r', '--remove-user', dest='removeUser', action='store_true', default=False, help='removes user. Requires --name option.')
+    parser.add_option('-n', '--name', dest='name', default="", help='user\'s name.')
+    parser.add_option('-p', '--password', dest='password', default="", help='user\'s password.')
+    parser.add_option('-d', '--database', dest='database', help='database file to use (for storing users\' passwords. Default: users.db', default='users.db')
+    parser.add_option('-l', '--list-users', dest='listUsers', help='list all users (only names).', default=False, action='store_true')
     options, args = parser.parse_args()
 
-    if options.addHS and options.removeHS:
-        print("You can't add and remove HiddenServers at the same time.")
+    if options.addUser and options.removeUser:
+        print("You can't add and remove user at the same time.")
         sys.exit(1)
-    if not (options.addHS or options.removeHS or options.listHS):
-        print("You have to use one of --add-hidden-server or --remove-hidden-server --list-hidden-servers options.")
+    if not (options.addUser or options.removeUser or options.listUsers):
+        print("You have to use one of --add-user or --remove-user --list-users options.")
         sys.exit(1)
     config.databaseFile = options.database
     database = PasswordDatabase()
-    if options.addHS:
+    if options.addUser:
         if not options.name or not options.password:
             print("Non-empty --name and --password options required.")
             sys.exit(2)
         database.addUser(options.name, options.password)
-    elif options.removeHS:
+    elif options.removeUser:
         if not options.name:
             print("Non-empty --name option required.")
             sys.exit(2)
         database.removeUser(options.name)
-    if options.listHS:
-        for hs in database.getUsers():
-            print(hs)
+    if options.listUsers:
+        for user in database.getUsers():
+            print(user)
 
