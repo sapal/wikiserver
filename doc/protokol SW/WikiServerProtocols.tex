@@ -85,12 +85,16 @@ HS na pierwszy typ zapytania powinien wykonać następujące:
     \item jeśli hasło (w originalRequest) jest błędne, lub z innego powodu nie ma uprawnien do przeglądania katalogu
     \begin{itemize}   
         \item \texttt{REJ \textbackslash n}
+        \item \texttt{username:name \textbackslash n}
+        \item \texttt{mypass:pass \textbackslash n}
         \item \texttt{id:id zapytania \textbackslash n}
         \item \texttt{\textbackslash n}
     \end{itemize}
     \item jeśli plik/folder nie istnieje, Hidden Server powinien odpowiedzieć poleceniem postaci:
     \begin{itemize}   
         \item \texttt{NOPE \textbackslash n}
+        \item \texttt{username:name \textbackslash n}
+        \item \texttt{mypass:pass \textbackslash n}
         \item \texttt{id:id zapytania \textbackslash n}
         \item \texttt{\textbackslash n}
     \end{itemize}
@@ -98,12 +102,16 @@ HS na pierwszy typ zapytania powinien wykonać następujące:
     \item jeśli data modyfikacji pliku jest wcześniejsza od daty zapisania kopi, Hidden Sever powinien odpowiedzieć poleceniem postaci:
     \begin{itemize}
         \item \texttt{OK \textbackslash n}
+        \item \texttt{username:name \textbackslash n}
+        \item \texttt{mypass:pass \textbackslash n}
         \item \texttt{id:id zapytania \textbackslash n}
         \item \texttt{\textbackslash n}
     \end{itemize}
     \item w przeciwnym przypadku, powinien odpowiedzieć poleceniem postaci:
     \begin{itemize}
         \item \texttt{OLD \textbackslash n}
+        \item \texttt{username:name \textbackslash n}
+        \item \texttt{mypass:pass \textbackslash n}
         \item \texttt{id:id zapytania \textbackslash n}
         \item \texttt{size:rozmiar pliku \textbackslash n}
         \item \texttt{filename:sciezka do pliku \textbackslash n}
@@ -118,6 +126,8 @@ Protokół PF (\texttt{Push-File}) służy do przesyłania danych z Hidden Serve
 Hidden Server podłącza się do Servera (na porcie 9999) i wysyła polecenie postaci:
 \begin{itemize}
         \item \texttt{PUSH \textbackslash n}
+        \item \texttt{username:name \textbackslash n}
+        \item \texttt{mypass:pass \textbackslash n}
         \item \texttt{id:id zapytania \textbackslash n}
         \item \texttt{size:rozmiar pliku \textbackslash n}
         \item \texttt{filename:sciezka do pliku \textbackslash n}

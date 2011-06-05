@@ -3,7 +3,7 @@
 
 import asyncore, socket	
 import asynchat
-from helper import parseData
+from helper import parseData, getAuthenticationBase64
 import os
 import threading
 from tempfile import mkstemp
@@ -74,19 +74,20 @@ class HiddenServer(SSLAsyncChat, object):
         request = "".join(self.data)
         self.data = []
         self.req = parseData(request)
-        #print self.req
         if(self.req['response'] == 'GET'):
             self.answerToGet()    
+        elif(self.req['response'] == 'REJ'):
+            rej_fun(self.myname)
+            self.close()    
     def answerToGet(self):
         """ Funkcja odpowiada na zapytanie typu GET.        
         """
-        # todo when originalRequest is passed
-    #    originalRequest = self.req['originalRequest']
-     #   (login, pas) = helper.getAuthenticationBase64(originalRequest)
-      #  if(pas != self.password): # todo if pass is ok
-       #     print 'Unauthenticated user'
-        #    self.answerToRej()
-         #   return
+        originalRequest = self.req['originalrequest']
+        (login, pas) = getAuthenticationBase64(originalRequest)
+        if(pas != self.password): # todo if pass is ok
+            print 'Unauthenticated user'
+            self.answerToRej()
+            return
         filename = self.req['filename']
         if(filename[0] == '/'):
             filename = filename[1:]
@@ -114,13 +115,11 @@ class HiddenServer(SSLAsyncChat, object):
     def answerToRej(self):
         """ Funkcja wysyła informację, że poszukiwany dokument nie istnieje (do Servera).
         """
-        self.buffer += 'REJ\nid:' + self.req['id'] + '\n\n'
-        rej_fun(self.myname)
-        self.close()
+        self.buffer += 'REJ\nusername:' + self.myname + '\nmypass:' + self.mypass +'\nid:' + self.req['id'] + '\n\n'
     def answerToNope(self):
         """ Funkcja wysyła informację, że poszukiwany dokument nie istnieje (do Servera).
         """
-        self.buffer += 'NOPE\nid:' + self.req['id'] + '\n\n'
+        self.buffer += 'NOPE\nusername:' + self.myname + '\nmypass:' + self.mypass +'\nid:' + self.req['id'] + '\n\n'
     def answerToLsMain(self):
         """ Funkcja wysyła listę zawartości głównego katalogu (do Servera). 
         """
@@ -135,10 +134,10 @@ class HiddenServer(SSLAsyncChat, object):
         if('modifytime' in self.req):
             print '\t\tGot a file with a modifytime'
             if(float(self.req['modifytime']) >= os.path.getmtime(filename)):
-                self.buffer += 'OK\nid:' + self.req['id'] + '\n\n'
+                self.buffer += 'OK\nusername:' + self.myname + '\nmypass:' + self.mypass +'\nid:' + self.req['id'] + '\n\n'
                 print "\t\tModifytime is OK"
                 return
-        self.buffer += 'OLD\nid:' + self.req['id'] + '\nsize:'
+        self.buffer += 'OLD\nusername:' + self.myname + '\nmypass:' + self.mypass +'\nid:' + self.req['id'] + '\nsize:'
         self.buffer += str(os.path.getsize(filename)) + '\n'
         self.buffer += 'type:file\n'
         self.buffer += 'modifytime:{0}\n\n'.format(os.path.getmtime(filename))
@@ -179,6 +178,8 @@ class PushFileConnectionClient(object):
         """ Funkcja wysyła plik (do buffera) - zgodnie z protokołem PF.
         """
         self.buffer += 'PUSH\n'
+        self.buffer += 'username:' + self.myname + '\n'
+        self.buffer += 'mypass:' + self.mypass +'\n'
         self.buffer += 'id:'+self.id+'\n'
         self.buffer += 'size:' + str(os.path.getsize(self.filename)) + '\n'
         self.buffer += 'filename:' + self.fakeFilename + '\n'
