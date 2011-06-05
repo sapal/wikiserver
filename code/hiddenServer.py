@@ -15,6 +15,9 @@ from config import SSL_C_CACERTS
 def done_fun(name):
     print 'Goodbye ' + name + "!"
 
+def rej_fun(name):
+    print 'Bad username / password for ' + name + '.'
+
 class HiddenServer(SSLAsyncChat, object):
     """ Klasa odpowiedzialna za trwałe połączenie z Serverem - na porcie 8888.
     """
@@ -108,10 +111,12 @@ class HiddenServer(SSLAsyncChat, object):
             self.answerToDir(filename)
             return
             
-    def answerToNope(self):
+    def answerToRej(self):
         """ Funkcja wysyła informację, że poszukiwany dokument nie istnieje (do Servera).
         """
         self.buffer += 'REJ\nid:' + self.req['id'] + '\n\n'
+        rej_fun(self.myname)
+        self.close()
     def answerToNope(self):
         """ Funkcja wysyła informację, że poszukiwany dokument nie istnieje (do Servera).
         """
