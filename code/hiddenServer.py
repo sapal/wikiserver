@@ -33,6 +33,7 @@ class HiddenServer(SSLAsyncChat, object):
         self.myname = myname
         self.mypass = mypass
         self.password = password
+        print "password: ", self.password
         print "Hello. Thanks for using WikiServer. You are now known as " + self.myname + "."
         self.buffer = 'MYNAMEIS\nusername:' + self.myname + '\nmypass:' + self.mypass + '\n\n'
         # print 'MYNAMEIS:' + self.myname + '\r\n'
@@ -84,6 +85,7 @@ class HiddenServer(SSLAsyncChat, object):
         """
         originalRequest = self.req['originalrequest']
         (login, pas) = getAuthenticationBase64(originalRequest)
+        print login, pas, self.password
         if(pas != self.password): # todo if pass is ok
             print 'Unauthenticated user'
             self.answerToRej()
@@ -141,7 +143,7 @@ class HiddenServer(SSLAsyncChat, object):
         self.buffer += str(os.path.getsize(filename)) + '\n'
         self.buffer += 'type:file\n'
         self.buffer += 'modifytime:{0}\n\n'.format(os.path.getmtime(filename))
-        newThreadPushFile(self.host, filename, fakeFilename, typ, self.req['id'])
+        newThreadPushFile(self.host, filename, fakeFilename, typ, self.req['id'], self.myname, self.mypass)
     def answerToDir(self, filename):
         """ Funkcja wysyła listę zawartości danego katalogu (do Servera).
         """
@@ -157,7 +159,7 @@ class HiddenServer(SSLAsyncChat, object):
 class PushFileConnectionClient(object):
     """ Klasa odpowiedzialna za chwilowe połaczenie z Serverem - na porcie 9999. Służy do wysłania pojedynczego pliku.
     """
-    def __init__(self, host, filename, fakeFilename, typ, id):
+    def __init__(self, host, filename, fakeFilename, typ, id, myname, mypass):
         self.socket = ssl.wrap_socket(socket.socket(socket.AF_INET, socket.SOCK_STREAM), cert_reqs=ssl.CERT_REQUIRED, do_handshake_on_connect=False, ca_certs=SSL_C_CACERTS)
         self.socket.connect( (host, 9999))
         self.buffer = ""
@@ -165,6 +167,8 @@ class PushFileConnectionClient(object):
         self.fakeFilename = filename
         self.id = id
         self.typ = typ
+        self.myname = mynaname
+        self.mypass = mypass
 
     def sendBuffer(self):
         """ Funkcja wysyła dane z buffera (do Servera).
@@ -199,10 +203,10 @@ class PushFileConnectionClient(object):
             os.remove(self.filename)
         print("\tFile sent.")
 
-def newThreadPushFile(host, filename, fakeFilename, typ, id):
+def newThreadPushFile(host, filename, fakeFilename, typ, id, myname, mypass):
     """ Metoda uruchamiajająca w nowym wątku wysyłanie pliku (do Servera).
     """
-    pfc = PushFileConnectionClient(host, filename, fakeFilename, typ, id)
+    pfc = PushFileConnectionClient(host, filename, fakeFilename, typ, id, myname, mypass)
 
     pfcThread = threading.Thread(target=pfc.sendFile)
     pfcThread.deamon = True
@@ -226,7 +230,7 @@ if __name__ == '__main__':
         directory = options.directory
     password = ''
     if(options.password!=None):
-        password = options.directory
+        password = options.password
     mypass = ''    
     if(options.mypass!=None):
         mypass = options.mypass
