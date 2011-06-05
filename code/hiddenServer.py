@@ -160,14 +160,14 @@ class PushFileConnectionClient(object):
     """ Klasa odpowiedzialna za chwilowe połaczenie z Serverem - na porcie 9999. Służy do wysłania pojedynczego pliku.
     """
     def __init__(self, host, filename, fakeFilename, typ, id, myname, mypass):
-        self.socket = ssl.wrap_socket(socket.socket(socket.AF_INET, socket.SOCK_STREAM), cert_reqs=ssl.CERT_REQUIRED, do_handshake_on_connect=False, ca_certs=SSL_C_CACERTS)
+        self.socket = ssl.wrap_socket(socket.socket(socket.AF_INET, socket.SOCK_STREAM), cert_reqs=ssl.CERT_REQUIRED, do_handshake_on_connect=True, ca_certs=SSL_C_CACERTS)
         self.socket.connect( (host, 9999))
         self.buffer = ""
         self.filename = filename
         self.fakeFilename = filename
         self.id = id
         self.typ = typ
-        self.myname = mynaname
+        self.myname = myname
         self.mypass = mypass
 
     def sendBuffer(self):
