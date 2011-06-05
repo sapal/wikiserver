@@ -33,7 +33,6 @@ class HiddenServer(SSLAsyncChat, object):
         self.myname = myname
         self.mypass = mypass
         self.password = password
-        print "password: ", self.password
         print "Hello. Thanks for using WikiServer. You are now known as " + self.myname + "."
         self.buffer = 'MYNAMEIS\nusername:' + self.myname + '\nmypass:' + self.mypass + '\n\n'
         # print 'MYNAMEIS:' + self.myname + '\r\n'
@@ -85,16 +84,23 @@ class HiddenServer(SSLAsyncChat, object):
         """
         originalRequest = self.req['originalrequest']
         (login, pas) = getAuthenticationBase64(originalRequest)
-        print login, pas, self.password
+        # DEBUG
+        #print login, pas, self.password
         if(pas != self.password): # todo if pass is ok
             print 'Unauthenticated user'
             self.answerToRej()
-            return
+            return            
         filename = self.req['filename']
         if(filename[0] == '/'):
             filename = filename[1:]
         if(self.path != '/'):
             filename = self.path + filename
+        
+        l = [os.path.realpath(self.path), os.path.realpath(filename)]
+        if(os.path.commonprefix(l) != os.path.realpath(self.path)):
+            print 'Bad request, asked for', os.path.realpath(filename), 'which is not in', os.path.realpath(self.path)
+            self.answerToRej()
+            return     
         print 'New filename is ' + filename + ' (empty if this directory)'
         if(filename == ''):
             print 'Responding to ls of this directory'
