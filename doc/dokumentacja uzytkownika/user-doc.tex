@@ -12,7 +12,7 @@
 	bookmarks, 
 	colorlinks=true, 
 	pdftitle={WikiServer - Dokumentacja Użytkownika}, 
-	pdfauthor={Dorota Wąs, Michał Sapalski}, 
+	pdfauthor={Dorota Wąs, Michał Bejda, Michał Sapalski}, 
 ]{hyperref}
 \newlength{\lword}
 \newcommand{\define}[3]{
@@ -39,38 +39,59 @@
 \begin{document}
 \pagestyle{fancy}
 \lhead{Dokumentacja Użytkownika --- \textsc{WikiServer}}
-\rhead{Dorota Wąs, Michał Sapalski}
+\rhead{Dorota Wąs, Michał Bejda, Michał Sapalski}
 \tableofcontents
 \section{Wymagania}
 \begin{itemize}
 \item \texttt{Linux} (testowane na \texttt{Ubuntu 10.10} oraz 
-	\texttt{Fedora 10 (Cambridge)}).
-	Istnieje możliwość uruchomienia HiddenServera również na Windowsie 
-	(testowane na \texttt{Windows XP SP3}).
+	\texttt{Ubuntu 11.04}).
 \item \texttt{Python} w wersji co najmniej 2.6 (testowane na 2.6, 2.7)
 \item Przeglądarka (testowane na \texttt{Firefox}, \texttt{Chrome})
 \end{itemize}
 
 \section{Użytkowanie}
 \begin{enumerate}
-\item Należy uruchomić server.py (\texttt{./server.py}) który będzie serwował pliki. Można go uruchomić z następującymi opcjami:
+\item Przed pierwszym uruchomieniem trzeba dodać użytkowników do bazy. 
+Można to zrobić programem manage.py 
+(\texttt{./manage.py --add-user nick --password hasło}).
+Program ten przyjmuje następujące opcje:
+\begin{itemize}
+    \item \texttt{-h} (lista opcji)
+    \item \texttt{-a} (dodaj użytkownika)
+    \item \texttt{-r} (usuń użytkownika)
+    \item \texttt{-n} (nazwa użytkownika)
+    \item \texttt{-p} (hasło użytkownika)
+    \item \texttt{-d} (plik z bazą użytkowników, domyślnie users.db)
+    \item \texttt{-l} (wypisz wszystkich użytkowników)
+\end{itemize}
+\item Należy uruchomić server.py (\texttt{./server.py}), który 
+będzie serwował pliki. Można go uruchomić z następującymi opcjami:
     \begin{itemize}
     \item \texttt{-h} (lista opcji)
     \item \texttt{-p port} (port dla serwera http, domyślnie 8080)
+    \item \texttt{-P port} (port dla serwera https, domyślnie 8081)
     \item \texttt{-c cachedir} (nazwa katalogu w którym serwer może cachować pliki, domyślnie cache)
     \item \texttt{-s cachesize} (rozmiar na tymczasowe pliki w KB, domyślnie 100MB)
+    \item \texttt{-d} (plik z bazą użytkowników, domyślnie users.db)
     \end{itemize}
-\item Należy uruchomić co najmniej raz hiddenServer.py (\texttt{./hiddenServer.py}) który podłączy się do serwera (może być na innym komputerze). Można go uruchomić z następującymi opcjami:
+\item Należy uruchomić co najmniej raz hiddenServer.py 
+(\texttt{./hiddenServer.py}), który podłączy się do serwera 
+(może być na innym komputerze). Można go uruchomić z następującymi opcjami:
     \begin{itemize}
     \item \texttt{-h} (lista opcji)
     \item \texttt{--host HOST} (nazwa serwera, domyślnie localhost)
     \item \texttt{-n name} (nasza nazwa, opcja obowiązkowa)
     \item \texttt{-d dir} (ścieżka do katalogu który chcemy udostępniać)
+    \item \texttt{-m mypass} (nasze hasło, domyślnie puste)
+    \item \texttt{-p pass} (hasło do przeglądania plików na tym HiddenServerze,
+ domyślnie puste)
     \end{itemize}
-\item Należy uruchomić przeglądarkę i wpisać jako adres \texttt{adres-hosta:8080} (np. \texttt{localhost:8080}).
-\item Możemy już przeglądać użytkowników i pliki przez nich udostępniane.
+\item Należy uruchomić przeglądarkę i wpisać jako adres 
+\texttt{adres-hosta:8080} (np. \texttt{localhost:8080}).
+\item Można też skorzystać z~szyfrowanego połączenia: 
+\texttt{https://adres-hosta:8081}.
+\item Możemy już przeglądać użytkowników (po podaniu hasła) 
+i~pliki przez nich udostępniane (również po podaniu odpowiedniego hasła).
 \end{enumerate}
 
-
-   
 \end{document}

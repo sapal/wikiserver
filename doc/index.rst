@@ -11,11 +11,13 @@ Contents:
 .. toctree::
    :maxdepth: 2
 
+   database
    helper
    hiddenServer
    httpServer
-   fileManager
    hsConnection
+   ssl_asyncchat
+   fileManager
 
 Indices and tables
 ==================

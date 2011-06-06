@@ -86,7 +86,7 @@ class HiddenServer(SSLAsyncChat, object):
         (login, pas) = getAuthenticationBase64(originalRequest)
         # DEBUG
         #print login, pas, self.password
-        if(pas != self.password): # todo if pass is ok
+        if pas != self.password or login != self.myname: # todo if pass is ok
             print 'Unauthenticated user'
             self.answerToRej()
             return            
