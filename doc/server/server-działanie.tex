@@ -12,7 +12,7 @@
 	bookmarks, 
 	colorlinks=true, 
 	pdftitle={Projekt na Sieci Komputerowe}, 
-	pdfauthor={Dorota Wąs, Michał Sapalski}, 
+	pdfauthor={Dorota Wąs, Michał Bejda, Michał Sapalski}, 
 ]{hyperref}
 \newlength{\lword}
 \newcommand{\define}[3]{
@@ -39,7 +39,7 @@
 \begin{document}
 \pagestyle{fancy}
 \lhead{Sieci Komputerowe --- \textsc{Projekt}}
-\rhead{Dorota Wąs, Michał Sapalski}
+\rhead{Dorota Wąs, Michał Bejda, Michał Sapalski}
 \tableofcontents
 \section{Działanie Servera}
 \begin{figure}
@@ -67,7 +67,9 @@ Każde połączenie z~użytkownikiem jest obsługiwane przez osobny wątek:
 \texttt{HttpConnection}. Przetwarza on~zapytanie HTTP na~żądanie konkretnego
 pliku i~wywołuje \texttt{FileManager.getFileInfo}. W~zależności od~typu 
 zwróconego pliku (\texttt{FileInfo.fileType}) zwraca on~użytkownikowi błąd 
-(\texttt{"not found"}), listing katalogu (\texttt{"directory"}) lub plik.
+(\texttt{"not found"}), prośbę o~podanie hasła 
+(\texttt{"authentication required"}), 
+listing katalogu (\texttt{"directory"}) lub plik.
 Odczytywanie pliku/listingu katalogu jest takie samo:
 otwiera się plik \texttt{FileInfo.filename}, czyta się tyle bajtów, ile jest
 dostępnych (\texttt{FileInfo.currentSize}), wysyła użytkownikowi a~następnie 

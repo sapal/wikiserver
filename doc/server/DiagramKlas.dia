@@ -68,7 +68,7 @@
         <dia:point val="27.2369,13.6847"/>
       </dia:attribute>
       <dia:attribute name="obj_bb">
-        <dia:rectangle val="27.1869,13.6347;61.2819,30.5846"/>
+        <dia:rectangle val="27.1869,13.6347;61.2819,30.5847"/>
       </dia:attribute>
       <dia:attribute name="elem_corner">
         <dia:point val="27.2369,13.6847"/>
@@ -481,7 +481,7 @@ o najpóźniejszym czasie modyfikacji i zaczyna go używać. Gdy taki nie istnie
         <dia:point val="27.75,-6.35"/>
       </dia:attribute>
       <dia:attribute name="elem_width">
-        <dia:real val="15.032500000000001"/>
+        <dia:real val="15.032499999999999"/>
       </dia:attribute>
       <dia:attribute name="elem_height">
         <dia:real val="19"/>
@@ -951,13 +951,13 @@ Zapisuje dane do odpowiedniego pliku i przy każdym zapisie wywołuje sizeChange
         <dia:point val="4.5285,-1.435"/>
       </dia:attribute>
       <dia:attribute name="obj_bb">
-        <dia:rectangle val="4.4785,-1.485;24.3285,33.065"/>
+        <dia:rectangle val="4.4785,-1.485;34.7235,33.065"/>
       </dia:attribute>
       <dia:attribute name="elem_corner">
         <dia:point val="4.5285,-1.435"/>
       </dia:attribute>
       <dia:attribute name="elem_width">
-        <dia:real val="19.75"/>
+        <dia:real val="30.145"/>
       </dia:attribute>
       <dia:attribute name="elem_height">
         <dia:real val="34.450000000000003"/>
@@ -1196,7 +1196,7 @@ Zapisuje dane do odpowiedniego pliku i przy każdym zapisie wywołuje sizeChange
             <dia:string>#string#</dia:string>
           </dia:attribute>
           <dia:attribute name="value">
-            <dia:string>#"file","directory","not found"#</dia:string>
+            <dia:string>#"authentication required", "file","directory","not found"#</dia:string>
           </dia:attribute>
           <dia:attribute name="comment">
             <dia:string>#typ pliku#</dia:string>
@@ -1507,21 +1507,25 @@ już mi nie jest potrzebne.#</dia:string>
         <dia:boolean val="false"/>
       </dia:attribute>
       <dia:attribute name="obj_pos">
-        <dia:point val="24.2785,-0.385"/>
+        <dia:point val="34.6735,-0.385"/>
       </dia:attribute>
       <dia:attribute name="obj_bb">
-        <dia:rectangle val="23.5285,-1.185;27.2869,22.8346"/>
+        <dia:rectangle val="26.1869,-1.185;36.2735,22.8347"/>
       </dia:attribute>
       <dia:attribute name="meta">
         <dia:composite type="dict"/>
       </dia:attribute>
       <dia:attribute name="orth_points">
-        <dia:point val="24.2785,-0.385"/>
-        <dia:point val="25.7577,-0.385"/>
-        <dia:point val="25.7577,22.0346"/>
-        <dia:point val="27.2369,22.0346"/>
+        <dia:point val="34.6735,-0.385"/>
+        <dia:point val="35.6735,-0.385"/>
+        <dia:point val="35.6735,10.8248"/>
+        <dia:point val="26.2369,10.8248"/>
+        <dia:point val="26.2369,22.0347"/>
+        <dia:point val="27.2369,22.0347"/>
       </dia:attribute>
       <dia:attribute name="orth_orient">
+        <dia:enum val="0"/>
+        <dia:enum val="1"/>
         <dia:enum val="0"/>
         <dia:enum val="1"/>
         <dia:enum val="0"/>
@@ -1655,7 +1659,7 @@ już mi nie jest potrzebne.#</dia:string>
         <dia:point val="61.2264,32.9502"/>
       </dia:attribute>
       <dia:attribute name="obj_bb">
-        <dia:rectangle val="60.7819,21.5846;62.3319,33.0002"/>
+        <dia:rectangle val="60.7819,21.5847;62.3319,33.0002"/>
       </dia:attribute>
       <dia:attribute name="meta">
         <dia:composite type="dict"/>
@@ -1663,8 +1667,8 @@ już mi nie jest potrzebne.#</dia:string>
       <dia:attribute name="orth_points">
         <dia:point val="61.2264,32.9502"/>
         <dia:point val="62.2319,32.9502"/>
-        <dia:point val="62.2319,22.0346"/>
-        <dia:point val="61.2319,22.0346"/>
+        <dia:point val="62.2319,22.0347"/>
+        <dia:point val="61.2319,22.0347"/>
       </dia:attribute>
       <dia:attribute name="orth_orient">
         <dia:enum val="0"/>
