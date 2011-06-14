@@ -69,7 +69,22 @@
 \section{Rozwiązania problemów związanych z~bezpieczeństwem}
 \subsection{Zagrożenia poufności}
 \subsubsection{Dostęp do nieudostępnionych plików na HiddenServerze}
+Zaimplementowaliśmy proponowane rozwiązanie (patrz: \emph{,,Analiza
+bezpieczeństwa Wikiservera''} 2.1 \emph{Dostęp do nieudostępnionych
+plików na~HiddenServerze} sekcja \emph{Sposoby zabezpieczania}). 
+
+HiddenServer sprawdza, czy plik jest udostępniony zanim zwróci go 
+w~odpowiedzi.
+
 \subsubsection{Podmiana Servera / podsłuchiwanie połączenia}
+Zaimplementowano proponowane rozwiązanie (patrz: \emph{,,Analiza
+bezpieczeństwa Wikiservera''} 2.3 \emph{Podmiana Servera / podsłuchiwanie 
+połączenia}
+sekcja \emph{,,Sposoby zabezpieczania''}) przy wykorzystaniu protokołu
+SSL. W~celu całkowitego zabezpieczenia przed atakiem typu 
+\emph{man-in-the-middle} certyfikaty autentykacji Servera są dystrybuowane
+razem z~programem.
+
 \subsubsection{Ograniczanie dostępu do plików}
 Zarówno przeglądanie plików na HiddenServerach, jak i~wyświetlanie
 listy dostępnych HiddenServerów wymaga podania poprawnego loginu
