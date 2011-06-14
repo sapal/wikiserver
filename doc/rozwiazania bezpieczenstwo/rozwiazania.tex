@@ -1,0 +1,109 @@
+\documentclass[a4paper,notitlepage]{article}
+\usepackage[a4paper, top=3.5cm, bottom=3.5cm]{geometry}
+
+
+\usepackage{listings}
+\usepackage[utf8]{inputenc}
+\usepackage{polski}
+\usepackage{amsmath}
+\usepackage{alltt}
+\usepackage{graphicx}
+%\usepackage{tikz}
+\usepackage{fancyhdr}
+%\usetikzlibrary{arrows,snakes,automata,shapes.geometric,shapes.symbols,shapes.callouts,calc}
+%\usepackage{tkz-2d}
+\usepackage[
+	bookmarks, 
+	colorlinks=true, 
+	pdftitle={Rozwiązania problemów związanych z bezpieczeństwem 
+	w Wikiserverze}, 
+	pdfauthor={Dorota Wąs, Michał Bejda, Michał Sapalski}, 
+]{hyperref}
+\newlength{\lword}
+\newcommand{\define}[3]{
+\begin{samepage}
+{\settowidth{\lword}{\textbf{\large #1} = }\vspace{0.2cm}\par\noindent\hangindent=\lword
+\textbf{\large #1} = \emph{#2} #3\vspace{0.2cm}\par}
+\end{samepage}
+}
+\lstset{
+    language=c++,
+    commentstyle=\itshape,
+    numbers=left,
+    numbersep=5pt,
+    frame=single,
+    tabsize=2,
+    breaklines=true,
+    breakatwhitespace=true,
+    inputencoding=utf8,
+    %extendedchars=true,
+	%texcl=true,
+	%mathescape=true
+}
+\lstset{
+    inputencoding=utf8,
+    literate={ą}{{\k{a}}}1
+             {Ą}{{\k{A}}}1
+             {ę}{{\k{e}}}1
+             {Ę}{{\k{E}}}1
+             {ó}{{\'o}}1
+             {Ó}{{\'O}}1
+             {ś}{{\'s}}1
+             {Ś}{{\'S}}1
+             {ł}{{\l{}}}1
+             {Ł}{{\L{}}}1
+             {ż}{{\.z}}1
+             {Ż}{{\.Z}}1
+             {ź}{{\'z}}1
+             {Ź}{{\'Z}}1
+             {ć}{{\'c}}1
+             {Ć}{{\'C}}1
+             {ń}{{\'n}}1
+             {Ń}{{\'N}}1
+}
+\begin{document}
+\pagestyle{fancy}
+\lhead{\textsc{Wikiserver} --- Zastosowane rozwiązania}
+\rhead{Dorota Wąs, Michał Bejda, Michał Sapalski}
+
+\section{Rozwiązania problemów związanych z~bezpieczeństwem}
+\subsection{Zagrożenia poufności}
+\subsubsection{Dostęp do nieudostępnionych plików na HiddenServerze}
+\subsubsection{Podmiana Servera / podsłuchiwanie połączenia}
+\subsubsection{Ograniczanie dostępu do plików}
+Zarówno przeglądanie plików na HiddenServerach, jak i~wyświetlanie
+listy dostępnych HiddenServerów wymaga podania poprawnego loginu
+i~hasła. Zastosowane zostało rozwiązanie, w~którym hasło jest 
+sprawdzane na HiddenServerze (patrz: \emph{,,Analiza
+bezpieczeństwa Wikiservera''} 3.2 \emph{Ograniczanie dostępu do plików}
+sekcja \emph{,,Proponowane rozwiązanie''}).
+\subsubsection{Maskowanie ściąganych plików}
+
+\subsection{Zagrożenia integralności}
+\subsubsection{Zmienianie danych ,,w~locie''}
+\subsubsection{Podmiana HiddenServera}
+\label{podmianaHS}
+Zalogowanie do Servera wymaga podania loginu i~hasła. Błąd związany
+z~dwukrotnym logowaniem tego samego użytkownika (patrz: \emph{,,Analiza
+bezpieczeństwa Wikiservera''} 4.2 \emph{Podmiana HiddenServera}). 
+
+W~bazie danych Servera są przechowywane jedynie sumy SHA512 haseł,
+żeby utrudnić ich złamanie w~przypadku gdy baza danych dostanie
+się w~niepowołane ręce.
+\subsubsection{Atak przez odgrywanie}
+
+\subsection{Zagrożenia dostępności}
+\subsubsection{Podmiana HiddenServera}
+Patrz: \emph{,,Analiza
+bezpieczeństwa Wikiservera''} 5.1 \emph{Podmiana HiddenServera} oraz 
+\ref{podmianaHS}.
+\subsubsection{Kopie zapasowe bazy danych}
+Kopia zapasowa pliku, w~którym znajduje się baza danych powinna być
+robiona regularnie. Zwykle Server będzie uruchomiony na serwerze, którego
+administrator robi kopie zapasowe danych na dysku lub w~inny sposób
+zabezpiecza przed ich utratą (np. stosując macierz RAID). W~takim przypadku
+przywrócenie poprzedniego stanu Servera w~razie awarii jest bardzo proste.
+Gdy Server jest uruchamiany na komputerze nie wyposażonym w~żadne systemy
+zapewniające ochronę przed utratą plików, trzeba zadbać o~to samemu.
+
+\end{document}
