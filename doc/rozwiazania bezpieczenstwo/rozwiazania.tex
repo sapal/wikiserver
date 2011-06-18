@@ -93,9 +93,11 @@ sprawdzane na HiddenServerze (patrz: \emph{,,Analiza
 bezpieczeństwa Wikiservera''} 3.2 \emph{Ograniczanie dostępu do plików}
 sekcja \emph{,,Proponowane rozwiązanie''}).
 \subsubsection{Maskowanie ściąganych plików}
+Użytkownicy mogą sami zadbać o zabezpieczenie swoich danych dodatkowo szyfrując zawierające je archiwa.
 
 \subsection{Zagrożenia integralności}
 \subsubsection{Zmienianie danych ,,w~locie''}
+Przeprowadzenie takiego ataku wymagałoby znajomości klucza prywatnego. Klucz publiczny dystrybuowany jest razem z oprogramowaniem w celu wykluczenia szansy na jego podmianę.
 \subsubsection{Podmiana HiddenServera}
 \label{podmianaHS}
 Zalogowanie do Servera wymaga podania loginu i~hasła. Błąd związany
@@ -106,7 +108,7 @@ W~bazie danych Servera są przechowywane jedynie sumy SHA512 haseł,
 żeby utrudnić ich złamanie w~przypadku gdy baza danych dostanie
 się w~niepowołane ręce.
 \subsubsection{Atak przez odgrywanie}
-
+Podczas połączenia klient i serwer dostarczają losowe fragmenty (nonce).
 \subsection{Zagrożenia dostępności}
 \subsubsection{Podmiana HiddenServera}
 Patrz: \emph{,,Analiza
